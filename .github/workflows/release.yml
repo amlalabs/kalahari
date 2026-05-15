@@ -148,18 +148,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Native build on x86_64 Linux. The matrix target equals the host
+          # arch, so napi-rs does not invoke --cross-compile and zig is
+          # unnecessary; only the rustup target is required.
           - target: x86_64-unknown-linux-gnu
             triple: linux-x64-gnu
             runs-on: ubuntu-latest
-            use-cross: false
+          # Cross-compile from x86_64 Linux to aarch64 Linux via zigbuild.
+          # build-native.mjs detects host != target and adds --cross-compile;
+          # napi-rs then drives cargo-zigbuild, which needs the zig binary
+          # on PATH. The previous CARGO=cross / Docker path silently fell
+          # back to host cargo (the runner cannot run privileged containers)
+          # and died with "Failed to find zig".
           - target: aarch64-unknown-linux-gnu
             triple: linux-arm64-gnu
             runs-on: ubuntu-latest
-            use-cross: true
+          # Native build on Apple Silicon macOS. Same host==target story as
+          # the x64-linux leg; no zig, no apt-get.
           - target: aarch64-apple-darwin
             triple: darwin-arm64
             runs-on: macos-latest
-            use-cross: false
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v5
@@ -193,11 +201,14 @@ jobs:
       - name: Install kernel build dependencies
         # Kalahari can pull in amla-vm-vmm -> amla-vm-guest-rootfs whose
         # build.rs compiles a Linux kernel as part of the guest rootfs.
-        # The kernel build needs objtool (libelf-dev), module-signing /
-        # BPF (libssl-dev, dwarves), parsers (flex, bison), bc, cpio,
-        # kmod, rsync, and pkg-config. Standard ubuntu-latest already
-        # has gcc/make/perl/python but not these.
-        if: matrix.use-cross == false
+        # Kernel build needs objtool (libelf-dev), module-signing / BPF
+        # (libssl-dev, dwarves), parsers (flex, bison), bc, cpio, kmod,
+        # rsync, pkg-config. Standard ubuntu-latest has gcc/make/perl/python
+        # but not these. Gated on Linux: macOS runs `brew`, not `apt-get`,
+        # and would die with "sudo: apt-get: command not found". The macOS
+        # leg never pulls amla-vm-guest-rootfs in practice (it's a dev-dep
+        # of amla-vm-vmm only) so the omission is safe.
+        if: runner.os == 'Linux'
         run: |
           set -euo pipefail
           sudo apt-get update -qq
@@ -207,26 +218,33 @@ jobs:
             flex bison bc \
             cpio kmod rsync
 
-      - name: Install cross
-        if: matrix.use-cross
-        run: cargo install cross --locked
+      - name: Install zig (for cargo-zigbuild cross-compile)
+        # build-native.mjs invokes `napi build --cross-compile` whenever
+        # the target arch differs from the host arch. napi-rs's
+        # --cross-compile is implemented via cargo-zigbuild, which shells
+        # out to `zig cc` as the linker. zig is not on the runner image
+        # by default; without it the build fails with "Failed to find zig".
+        #
+        # Gated on the only matrix entry that actually cross-compiles
+        # (linux-arm64-gnu from an x86_64 runner). Other legs build for
+        # the host and skip the zigbuild path entirely.
+        if: matrix.triple == 'linux-arm64-gnu'
+        run: |
+          set -euo pipefail
+          ZIG_VERSION="0.13.0"
+          curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz" -o /tmp/zig.tar.xz
+          sudo mkdir -p /opt/zig
+          sudo tar -xJf /tmp/zig.tar.xz -C /opt/zig --strip-components=1
+          echo "/opt/zig" >> "$GITHUB_PATH"
+          # Smoke-test in the current shell so a broken download fails the
+          # step explicitly here rather than later inside napi build.
+          /opt/zig/zig version
 
       - name: Install npm dependencies
         run: npm install
 
       - name: Build ${{ matrix.triple }}
-        if: matrix.use-cross == false
         run: npm run build:native -- --target=${{ matrix.target }}
-
-      - name: Build ${{ matrix.triple }} (via cross)
-        if: matrix.use-cross
-        env:
-          NAPI_CROSS: "1"
-        run: |
-          # `cross` wraps cargo with a container that has the right sysroot for
-          # the foreign target. napi-rs honors CARGO=cross when it shells out.
-          export CARGO=cross
-          npm run build:native -- --target=${{ matrix.target }}
 
       - name: Upload ${{ matrix.triple }} artifact
         uses: actions/upload-artifact@v4

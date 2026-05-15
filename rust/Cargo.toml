@@ -61,7 +61,7 @@ members = [
 # Placeholder. The real release version is injected at extract time by
 # scripts/extract-mirror.py (driven by the release-vX.Y.Z tag).
 # See mirrors/README.md for the release flow.
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 license = "AGPL-3.0-or-later OR BUSL-1.1"
 authors = ["Amla Labs <hi@amlalabs.com>"]

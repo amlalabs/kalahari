@@ -1,6 +1,6 @@
 {
   "name": "@amlalabs/kalahari",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Local microVM sandboxes for agent code",
   "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "homepage": "https://github.com/amlalabs/kalahari#readme",
@@ -106,9 +106,9 @@
     }
   },
   "optionalDependencies": {
-    "@amlalabs/kalahari-darwin-arm64": "0.2.2",
-    "@amlalabs/kalahari-linux-arm64-gnu": "0.2.2",
-    "@amlalabs/kalahari-linux-x64-gnu": "0.2.2"
+    "@amlalabs/kalahari-darwin-arm64": "0.2.3",
+    "@amlalabs/kalahari-linux-arm64-gnu": "0.2.3",
+    "@amlalabs/kalahari-linux-x64-gnu": "0.2.3"
   },
   "devDependencies": {
     "@computesdk/provider": "2.0.0",

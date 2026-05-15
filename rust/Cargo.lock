@@ -39,7 +39,7 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "amla-ax-agents"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-container",
  "amla-vm-interceptor",
@@ -54,7 +54,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-bin"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-ax-agents",
  "amla-ax-cli",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-cli"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-ax-agents",
  "amla-vm-terminal",
@@ -88,7 +88,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-daemon"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-ax-agents",
  "amla-ax-frontend",
@@ -106,7 +106,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-frontend"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "axum 0.8.8",
  "mime_guess",
@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-gitfs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-composite-fs",
  "amla-vm-fuse",
@@ -133,7 +133,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-mcp"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "log",
  "serde",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-sniffer"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "etherparse",
@@ -155,7 +155,7 @@ dependencies = [
 
 [[package]]
 name = "amla-ax-store"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-container-store",
  "anyhow",
@@ -164,7 +164,7 @@ dependencies = [
 
 [[package]]
 name = "amla-container"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-erofs",
  "amla-vm-fuse",
@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "amla-container-cli"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-container",
  "amla-container-engine",
@@ -202,7 +202,7 @@ dependencies = [
 
 [[package]]
 name = "amla-container-cli-bin"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-container-cli",
  "amla-container-engine",
@@ -217,7 +217,7 @@ dependencies = [
 
 [[package]]
 name = "amla-container-engine"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-container",
  "amla-container-store",
@@ -240,7 +240,7 @@ dependencies = [
 
 [[package]]
 name = "amla-container-store"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "hex",
@@ -252,7 +252,7 @@ dependencies = [
 
 [[package]]
 name = "amla-guest"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-constants",
  "amla-vm-ringbuf",
@@ -271,7 +271,7 @@ dependencies = [
 
 [[package]]
 name = "amla-oci"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-container-store",
  "amla-vm-erofs",
@@ -288,7 +288,7 @@ dependencies = [
 
 [[package]]
 name = "amla-protocol"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "chrono",
  "ciborium",
@@ -309,7 +309,7 @@ dependencies = [
 
 [[package]]
 name = "amla-protocol-capabilities"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-protocol",
  "amla-protocol-constraints",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "amla-protocol-constraints"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "proptest",
  "serde",
@@ -334,7 +334,7 @@ dependencies = [
 
 [[package]]
 name = "amla-sandbox"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-protocol",
  "amla-protocol-capabilities",
@@ -358,7 +358,7 @@ dependencies = [
 
 [[package]]
 name = "amla-sandbox-audit"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "blake3",
  "chrono",
@@ -368,7 +368,7 @@ dependencies = [
 
 [[package]]
 name = "amla-sandbox-js"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "cc",
  "chrono",
@@ -381,7 +381,7 @@ dependencies = [
 
 [[package]]
 name = "amla-sandbox-scheduler"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "criterion",
  "fastrand",
@@ -413,7 +413,7 @@ dependencies = [
 
 [[package]]
 name = "amla-sandbox-tools"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "safetensors",
  "serde",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "amla-sandbox-vfs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-sandbox-scheduler",
  "regex",
@@ -435,7 +435,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-boot"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-mem",
@@ -448,7 +448,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-composite-fs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-fuse",
  "amla-vm-synthesized-fs",
@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-constants"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "postcard",
  "serde",
@@ -468,7 +468,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-core"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-constants",
  "amla-vm-ipc",
@@ -483,7 +483,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-cowtree"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "libc",
  "log",
@@ -494,7 +494,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-erofs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-constants",
  "bytemuck",
@@ -505,7 +505,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-fuse"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-fuse-abi",
@@ -518,11 +518,11 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-fuse-abi"
-version = "0.2.2"
+version = "0.2.3"
 
 [[package]]
 name = "amla-vm-gic"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-boot",
  "amla-vm-core",
@@ -533,14 +533,14 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-guest-rootfs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-erofs",
 ]
 
 [[package]]
 name = "amla-vm-hvf"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-boot",
  "amla-vm-core",
@@ -564,7 +564,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-hyperv"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-boot",
  "amla-vm-core",
@@ -574,7 +574,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-interceptor"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-policy-net",
  "tokio",
@@ -583,7 +583,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-ipc"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-ipc-derive",
  "amla-vm-mem",
@@ -600,7 +600,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-ipc-derive"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -609,7 +609,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-kvm"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-boot",
  "amla-vm-core",
@@ -634,7 +634,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-mem"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-constants",
  "amla-vm-cowtree",
@@ -648,7 +648,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-policy-net"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-constants",
  "amla-vm-core",
@@ -663,7 +663,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-redbfs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-erofs",
  "amla-vm-fuse",
@@ -682,14 +682,14 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-ringbuf"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "criterion",
 ]
 
 [[package]]
 name = "amla-vm-scheduler"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-constants",
  "amla-vm-core",
@@ -710,7 +710,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-stub"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-boot",
  "amla-vm-core",
@@ -720,7 +720,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-synthesized-fs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-fuse",
  "bytemuck",
@@ -732,7 +732,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-terminal"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "crossterm",
  "log",
@@ -742,11 +742,11 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-tls-parse"
-version = "0.2.2"
+version = "0.2.3"
 
 [[package]]
 name = "amla-vm-tls-proxy-net"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-interceptor",
  "amla-vm-tls-parse",
@@ -770,7 +770,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-usernet"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-constants",
  "amla-vm-core",
@@ -792,7 +792,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "bytemuck",
@@ -804,7 +804,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio-console"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-virtio",
@@ -814,7 +814,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio-fs"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-fuse",
@@ -825,7 +825,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio-mem"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-virtio",
@@ -834,7 +834,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio-mmio"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-virtio",
@@ -844,7 +844,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio-net"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-virtio",
@@ -854,7 +854,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio-pmem"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-virtio",
@@ -863,7 +863,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-virtio-rng"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-core",
  "amla-vm-virtio",
@@ -873,7 +873,7 @@ dependencies = [
 
 [[package]]
 name = "amla-vm-vmm"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-vm-boot",
  "amla-vm-constants",
@@ -4137,7 +4137,7 @@ dependencies = [
 
 [[package]]
 name = "kalahari"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "amla-container",
  "amla-container-engine",
