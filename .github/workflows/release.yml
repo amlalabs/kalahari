@@ -416,13 +416,15 @@ jobs:
       - name: Set up Node.js (with npm registry auth)
         uses: actions/setup-node@v4
         with:
-          # Trusted Publishing requires npm >= 11.5.1 and Node >= 22.14.
-          # Node 22 ships with npm 10, so we also bump npm explicitly below.
-          node-version: "22"
+          # Node 24 bundles npm 11.x; Trusted Publishing requires npm
+          # >= 11.5.1, so this version bump means we do not need a
+          # separate `npm install -g npm@latest` step. A prior version
+          # of this workflow ran that step on Node 22, but the bundled
+          # npm 10 on the runner image is sporadically missing a
+          # transitive dep (`promise-retry`) and dies before it can
+          # self-upgrade. Node 24 ships a working npm 11 out of the box.
+          node-version: "24"
           registry-url: https://registry.npmjs.org
-
-      - name: Upgrade npm to a Trusted-Publishing-capable version
-        run: npm install -g npm@latest
 
       - name: Download tarballs
         uses: actions/download-artifact@v4
