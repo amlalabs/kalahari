@@ -1,0 +1,20 @@
+#  Workspace-level clippy configuration.
+#
+#  `disallowed-methods` is read by the `clippy::disallowed_methods` lint
+#  (denied via `[workspace.lints.clippy]` in Cargo.toml).
+#
+#  `Box::leak`, `Vec::leak`, `String::leak`, and `mem::forget` are banned
+#  outright — in a long-running VMM, intentional leaks corrupt
+#  process-lifetime accounting and hide under sanitizers. When the
+#  lifetimes don't work, reshape the API (owned return, scratch buffer,
+#  Arc) instead of reaching for leaks.
+disallowed-methods = [
+    { path = "std::boxed::Box::leak", reason = "no intentional leaks — reshape lifetimes instead" },
+    { path = "std::vec::Vec::leak", reason = "no intentional leaks — reshape lifetimes instead" },
+    { path = "std::string::String::leak", reason = "no intentional leaks — reshape lifetimes instead" },
+    { path = "std::mem::forget", reason = "no intentional leaks — use Drop or explicit ownership transfer" },
+    { path = "std::sync::Arc::strong_count", reason = "Arc reference counts are not synchronization — encode ownership explicitly" },
+    { path = "rustix::io::dup", reason = "no fd table bloat — use Arc<OwnedFd> for shared ownership" },
+    { path = "std::os::fd::OwnedFd::try_clone", reason = "no fd table bloat — use Arc<OwnedFd> for shared ownership" },
+    { path = "std::fs::File::try_clone", reason = "no fd table bloat — use Arc<OwnedFd> for shared ownership" },
+]

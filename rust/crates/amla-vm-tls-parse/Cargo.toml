@@ -1,0 +1,12 @@
+[package]
+name = "amla-vm-tls-parse"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Single source of truth for TLS ClientHello byte parsing in the Amla VM stack (SNI, ALPN, ECH detection)"
+
+[lib]
+name = "amla_tls_parse"
+
+[lints]
+workspace = true

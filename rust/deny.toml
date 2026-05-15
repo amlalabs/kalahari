@@ -1,0 +1,136 @@
+# cargo-deny configuration
+#
+# Usage:
+#   cd src/rust && cargo deny check
+#
+# Install: cargo install cargo-deny
+
+[graph]
+# Target platforms for dependency resolution
+# - wasm32-wasip1: amla-sandbox
+# - x86_64-unknown-linux-musl: amla-vm, amla-ax, amla-container
+targets = [
+    "x86_64-unknown-linux-musl",
+    "wasm32-wasip1",
+    "wasm32-unknown-unknown",
+]
+
+[advisories]
+# Deny packages with known security advisories
+version = 2
+db-path = "~/.cargo/advisory-db"
+# Warn when an advisory in the `ignore` list no longer matches any crate —
+# signals the ignore is stale and can be removed. Promoted from "allow" so
+# that dead ignores aren't silently carried forever.
+unused-ignored-advisory = "warn"
+ignore = [
+    # paste is unmaintained but used transitively by tokenizers
+    # No action we can take - upstream dependency
+    "RUSTSEC-2024-0436",
+    # rsa crate timing side-channel (Marvin Attack) — transitive via russh
+    # No safe upgrade available; only used for SSH key exchange, not direct RSA
+    "RUSTSEC-2023-0071",
+    # rustls-pemfile unmaintained — transitive via dev-deps only (infer-worker-core tests)
+    "RUSTSEC-2025-0134",
+    # rand 0.8 soundness issue with custom logger + thread_rng reseeding — transitive via oauth2
+    # oauth2 5.0.0 (latest) pins rand 0.8; conditions are extremely narrow (custom logger
+    # accessing thread_rng during reseed). No upgrade path available.
+    "RUSTSEC-2026-0097",
+]
+
+[licenses]
+version = 2
+# Allow only these licenses
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "AGPL-3.0-or-later",
+    "BUSL-1.1",
+    "0BSD",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+    "Zlib",
+    "CC0-1.0",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    # webpki-roots: Mozilla root CA data
+    "CDLA-Permissive-2.0",
+    # aws-lc-sys: AWS crypto library (via rcgen → aws-lc-rs)
+    "OpenSSL",
+]
+# Confidence threshold for license detection — pushed to 0.93, the
+# upstream-recommended max-strict value (default is 0.8). Higher confidence
+# threshold reduces the risk that a misidentified license slips through as
+# permissively-licensed.
+confidence-threshold = 0.93
+# Warn about licenses in the allow-list that no longer cover any crate.
+# Same rationale as `unused-ignored-advisory` above.
+unused-allowed-license = "warn"
+
+# Per-crate license exceptions — narrower than globally allowing GPL.
+[[licenses.exceptions]]
+# amla-vm-guest-rootfs packages a built Linux kernel into the guest rootfs.
+# The kernel, its build glue, and local kernel patches are GPL-2.0-only;
+# our own Rust code and AMLA guest artifacts are AGPL-3.0-or-later OR
+# BUSL-1.1. Hence the aggregate SPDX expression on the crate manifest.
+crate = "amla-vm-guest-rootfs"
+allow = ["GPL-2.0-only"]
+
+[bans]
+# Deny when multiple versions of a crate exist in the dependency graph
+multiple-versions = "deny"
+# Wildcards intentionally allowed: every workspace-internal dep is
+# `path = "crates/..."` and cargo-deny treats those as wildcards even
+# under `allow-wildcard-paths = true` because some of our crates are
+# considered publishable. Re-enabling `deny` here would block the entire
+# workspace; the protection wildcards provide (catching unbounded crates.io
+# deps) is already covered by `cargo update`'s lock file + dependabot.
+wildcards = "allow"
+
+# Skip certain crates for duplicate version checks (transitive deps we can't control)
+# Note: Some skips may not match in all workspaces - that's expected with shared config
+skip = [
+    # amla-sandbox: tokenizers -> spm_precompiled uses base64 0.13, we use 0.22
+    { crate = "base64", reason = "tokenizers transitive dep uses 0.13" },
+    # amla-sandbox: jaq -> chumsky uses hashbrown 0.14, jaq -> indexmap uses 0.16
+    # amla-ax: gix -> imara-diff uses hashbrown 0.15, gix-hashtable uses 0.16
+    { crate = "hashbrown", reason = "jaq transitive deps / gix internal" },
+    # amla-ax: gix -> imara-diff -> hashbrown 0.15 -> foldhash 0.1 vs 0.2
+    { crate = "foldhash", reason = "gix internal hashbrown version split" },
+    # amla-ax: gix-diff pulls imara-diff 0.1 and 0.2
+    { crate = "imara-diff", reason = "gix internal version split" },
+    # amla-ax: gix-tempfile uses signal-hook 0.4, crossterm uses 0.3
+    { crate = "signal-hook", reason = "gix vs crossterm version split" },
+    # amla-sandbox: ed25519-dalek uses rand_core 0.6, tokenizers uses 0.9
+    { crate = "rand_core", reason = "crypto vs ML deps version split" },
+    # amla-vm: smoltcp/vmm-sys-util use bitflags 1.x, kvm-ioctls uses 2.x
+    { crate = "bitflags", reason = "KVM ecosystem bitflags 1->2 migration" },
+    # amla-vm: postcard -> heapless 0.7, smoltcp -> heapless 0.8
+    { crate = "heapless", reason = "embedded ecosystem version split" },
+    { crate = "hash32", reason = "heapless transitive dep" },
+    # amla-vm: ring uses getrandom 0.2, tempfile/dirs use 0.3/0.4
+    { crate = "getrandom", reason = "getrandom ecosystem version fragmentation" },
+    # amla-ax: crossterm 0.28 uses rustix 0.38/linux-raw-sys 0.4, rest use 1.x/0.11
+    { crate = "rustix", reason = "crossterm transitive dep version split" },
+    { crate = "linux-raw-sys", reason = "crossterm transitive dep version split" },
+    # infer-market: worker crate pins matchit 0.7 (CF Workers SDK), axum uses 0.8
+    { crate = "matchit", reason = "CF Workers SDK vs axum version split" },
+    # infer-market: reqwest uses wasm-streams 0.4, worker uses 0.5
+    { crate = "wasm-streams", reason = "reqwest vs CF Workers SDK version split" },
+    # infer-market: tokio-tungstenite uses webpki-roots 0.26, reqwest uses 1.0
+    { crate = "webpki-roots", reason = "tokio-tungstenite vs reqwest version split" },
+    # unified workspace: ed25519-dalek uses cpufeatures 0.2, sha2 uses 0.3
+    { crate = "cpufeatures", reason = "crypto ecosystem version split" },
+]
+
+# Deny specific crates (e.g., unmaintained or insecure)
+deny = []
+
+[sources]
+# Only allow crates from crates.io
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

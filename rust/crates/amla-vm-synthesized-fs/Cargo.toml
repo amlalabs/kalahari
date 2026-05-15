@@ -1,0 +1,24 @@
+[package]
+name = "amla-vm-synthesized-fs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Read-only FUSE filesystem synthesized from in-memory and host-file content"
+
+[lib]
+name = "amla_synthesized_fs"
+
+[dependencies]
+amla-vm-fuse.workspace = true
+bytemuck = { workspace = true, features = ["derive", "min_const_generics"] }
+log.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["rt", "macros"] }
+
+[lints]
+workspace = true

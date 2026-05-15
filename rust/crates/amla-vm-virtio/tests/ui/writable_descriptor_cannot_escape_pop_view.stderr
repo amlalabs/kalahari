@@ -1,0 +1,14 @@
+error: lifetime may not live long enough
+  --> tests/ui/writable_descriptor_cannot_escape_pop_view.rs:13:13
+   |
+11 |         .pop_view(0, queue, |view, _ctx| {
+   |                              ----      - return type of closure is Result<Vec<amla_virtio::descriptor::DescriptorBuffer<'2, '_, M, amla_virtio::descriptor::DeviceWritable>>, QueueViolation>
+   |                              |
+   |                              has type `&mut QueueView<'1, '_, '_, M>`
+12 |             let chain = view.pop().unwrap().into_split().unwrap();
+13 |             Ok(chain.writable().to_vec())
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ returning this value requires that `'1` must outlive `'2`
+   |
+   = note: requirement occurs because of the type `amla_virtio::descriptor::DescriptorBuffer<'_, '_, M, amla_virtio::descriptor::DeviceWritable>`, which makes the generic argument `'_` invariant
+   = note: the struct `amla_virtio::descriptor::DescriptorBuffer<'brand, 'm, M, Access>` is invariant over the parameter `'brand`
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance

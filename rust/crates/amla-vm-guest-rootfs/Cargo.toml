@@ -1,0 +1,35 @@
+[package]
+name = "amla-vm-guest-rootfs"
+version.workspace = true
+edition.workspace = true
+# Rust source and AMLA guest artifacts are AGPL-3.0-or-later OR BUSL-1.1.
+# The embedded `KERNEL: &[u8]`, kernel build glue, and kernel patches are
+# GPL-2.0-only.
+# See README.md and KERNEL-SOURCE.md for the compliance notice.
+license = "(AGPL-3.0-or-later OR BUSL-1.1) AND GPL-2.0-only"
+description = "Base guest rootfs (coreutils + guest agent) + embedded Linux kernel for amla-vm"
+build = "build.rs"
+# Keep the kernel build tree out of the published tarball. `kernel/.gitignore`
+# already excludes `.build/` from git, but cargo's packager does not always
+# honor nested gitignores — the explicit exclude here guarantees correct
+# tarball contents (Cargo.toml, build.rs, src/, README, LICENSE-GPL-2.0,
+# KERNEL-SOURCE.md, kernel/Makefile, kernel/patches/*).
+exclude = ["kernel/.build/**"]
+
+[lib]
+name = "amla_guest_rootfs"
+
+[features]
+## Include test binaries (/test/*, /vm_exit, /bin/https_get) in the
+## EROFS rootfs image. Without this feature, only the core rootfs (coreutils,
+## guest_agent) is built — significantly faster and smaller.
+test-binaries = []
+[dependencies]
+amla-vm-erofs.workspace = true
+
+[dev-dependencies]
+
+[build-dependencies]
+
+[lints]
+workspace = true

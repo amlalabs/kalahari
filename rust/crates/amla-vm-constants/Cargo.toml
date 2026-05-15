@@ -1,0 +1,20 @@
+[package]
+name = "amla-vm-constants"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Shared constants for amla-vm (no_std compatible)"
+
+[lib]
+name = "amla_constants"
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+postcard = { version = "1.0", default-features = false, features = ["alloc"] }
+
+[lints]
+workspace = true

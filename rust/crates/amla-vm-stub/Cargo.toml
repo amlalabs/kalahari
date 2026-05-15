@@ -1,0 +1,18 @@
+[package]
+name = "amla-vm-stub"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Stub hypervisor backend for unsupported platforms"
+
+[lib]
+name = "amla_stub"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-boot.workspace = true
+amla-vm-mem.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

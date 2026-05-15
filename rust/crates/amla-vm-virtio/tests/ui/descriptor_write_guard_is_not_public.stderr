@@ -1,0 +1,5 @@
+error[E0432]: unresolved import `amla_virtio::DescriptorWriteGuard`
+ --> tests/ui/descriptor_write_guard_is_not_public.rs:3:5
+  |
+3 | use amla_virtio::DescriptorWriteGuard;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `DescriptorWriteGuard` in the root

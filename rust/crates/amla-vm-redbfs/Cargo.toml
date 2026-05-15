@@ -1,0 +1,30 @@
+[package]
+name = "amla-vm-redbfs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Writable FUSE filesystem backend backed by a redb database"
+
+[dependencies]
+amla-vm-erofs.workspace = true
+amla-vm-fuse.workspace = true
+amla-vm-fuse-abi.workspace = true
+anyhow.workspace = true
+log.workspace = true
+postcard.workspace = true
+redb.workspace = true
+rustix = { workspace = true, features = ["fs"] }
+serde = { workspace = true, features = ["derive"] }
+thiserror.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+[[bench]]
+name = "redbfs_throughput"
+harness = false
+
+[lints]
+workspace = true

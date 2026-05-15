@@ -1,0 +1,22 @@
+[package]
+name = "amla-vm-composite-fs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Composable FUSE filesystem wrappers: mount prefixing, merging, and overlay"
+
+[lib]
+name = "amla_composite_fs"
+
+[dependencies]
+amla-vm-fuse.workspace = true
+bytemuck = { workspace = true, features = ["derive", "min_const_generics"] }
+log.workspace = true
+trait-variant.workspace = true
+
+[dev-dependencies]
+amla-vm-synthesized-fs.workspace = true
+tokio = { workspace = true, features = ["rt", "macros"] }
+
+[lints]
+workspace = true

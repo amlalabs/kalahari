@@ -1,0 +1,8 @@
+error[E0599]: no method named `load_kernel` found for struct `VirtualMachine<amla_vmm::Ready<'_, NullFsBackend>>` in the current scope
+ --> tests/ui/load_kernel_on_suspended.rs:9:8
+  |
+9 |     vm.load_kernel(&[]);
+  |        ^^^^^^^^^^^ method not found in `VirtualMachine<amla_vmm::Ready<'_, NullFsBackend>>`
+  |
+  = note: the method was found for
+          - `VirtualMachine<New>`

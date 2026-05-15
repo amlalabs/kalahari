@@ -1,0 +1,21 @@
+# Amla Licensing
+
+Amla-owned code in this package is available under either of these license
+choices:
+
+- GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`)
+- Business Source License 1.1 (`BUSL-1.1`), changing to the MIT License three
+  years after the first public distribution of each specific version
+
+You may use Amla-owned code under either license choice. Commercial licenses
+are available under a separate written agreement with Amla.
+
+The full license texts and BUSL parameters are in:
+
+- `LICENSES/AGPL-3.0-or-later.txt`
+- `LICENSES/BUSL-1.1.txt`
+
+When you run `kalahari prepare`, the prepared microVM rootfs and kernel embed
+material under additional licenses (notably Linux kernel sources under
+`GPL-2.0-only`). Compliance notices for those components ship with the
+prepared image artifacts, not with this npm package.

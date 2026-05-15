@@ -1,0 +1,22 @@
+[package]
+name = "amla-vm-virtio-fs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Virtio-fs device for amla-vm"
+
+[lib]
+name = "amla_virtio_fs"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-fuse.workspace = true
+amla-vm-virtio.workspace = true
+bytemuck.workspace = true
+
+[dev-dependencies]
+amla-vm-virtio = { workspace = true, features = ["test-utils"] }
+tokio = { workspace = true, features = ["macros", "rt"] }
+
+[lints]
+workspace = true

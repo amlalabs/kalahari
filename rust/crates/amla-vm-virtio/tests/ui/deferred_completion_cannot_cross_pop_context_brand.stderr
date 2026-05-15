@@ -1,0 +1,33 @@
+error: lifetime may not live long enough
+  --> tests/ui/deferred_completion_cannot_cross_pop_context_brand.rs:10:13
+   |
+ 6 | fn deferred_completion_cannot_cross_pop_context_brand<'ctx, 'chain, 'm, M: GuestMemory>(
+   |                                                       ----  ------ lifetime `'chain` defined here
+   |                                                       |
+   |                                                       lifetime `'ctx` defined here
+...
+10 |     let _ = context.defer_split_completion(chain);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ argument requires that `'ctx` must outlive `'chain`
+   |
+   = help: consider adding the following bound: `'ctx: 'chain`
+   = note: requirement occurs because of the type `SplitDescriptorChain<'_, '_, M>`, which makes the generic argument `'_` invariant
+   = note: the struct `SplitDescriptorChain<'brand, 'm, M>` is invariant over the parameter `'brand`
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
+
+error: lifetime may not live long enough
+  --> tests/ui/deferred_completion_cannot_cross_pop_context_brand.rs:10:13
+   |
+ 6 | fn deferred_completion_cannot_cross_pop_context_brand<'ctx, 'chain, 'm, M: GuestMemory>(
+   |                                                       ----  ------ lifetime `'chain` defined here
+   |                                                       |
+   |                                                       lifetime `'ctx` defined here
+...
+10 |     let _ = context.defer_split_completion(chain);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ argument requires that `'chain` must outlive `'ctx`
+   |
+   = help: consider adding the following bound: `'chain: 'ctx`
+   = note: requirement occurs because of a mutable reference to `QueuePopContext<'_>`
+   = note: mutable references are invariant over their type parameter
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
+
+help: `'ctx` and `'chain` must be the same: replace one with the other

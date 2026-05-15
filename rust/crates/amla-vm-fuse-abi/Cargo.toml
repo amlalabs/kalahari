@@ -1,0 +1,16 @@
+[package]
+name = "amla-vm-fuse-abi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FUSE protocol constants (Linux ABI) for amla-vm"
+
+[lib]
+name = "amla_fuse_abi"
+
+[features]
+default = ["std"]
+std = []
+
+[lints]
+workspace = true

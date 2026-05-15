@@ -1,0 +1,20 @@
+[package]
+name = "amla-vm-interceptor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Stream interceptor traits for TCP and DNS interception"
+
+[lib]
+name = "amla_interceptor"
+
+[dependencies]
+amla-vm-policy-net.workspace = true
+tokio = { workspace = true, features = ["sync", "io-util"] }
+tokio-util.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+[lints]
+workspace = true

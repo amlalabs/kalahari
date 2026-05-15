@@ -1,0 +1,519 @@
+# Kalahari mirror release workflow.
+#
+# Fires on tag pushes matching `v*` to amlalabs/kalahari (the mirror repo).
+# Release automation pushes a `vX.Y.Z` tag here after generating the release
+# source tree; that tag push is what triggers this workflow.
+#
+# Pipeline:
+#   1. build-native (matrix): cross-build napi-rs node addons for 3 targets.
+#   2. assemble:              gather artifacts, stage per-arch npm dirs, pack
+#                              the main package and 3 per-arch sub-packages.
+#   3. publish:               push the 3 sub-packages to npm first, then the
+#                              main package (so its release:check-siblings
+#                              prepublishOnly check succeeds).
+#   4. create-release:        attach the 4 tarballs to a GitHub Release.
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  # Manual re-runs (e.g. after fixing the workflow itself) without forcing
+  # a fresh tag push. Pass `tag` to override `github.ref_name`.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v1.2.3). Required for manual dispatch."
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Validate the dispatched/pushed tag before any build job runs. Catches
+  # `workflow_dispatch` mistakes (e.g. typing `main` into the `tag` input)
+  # AND a malicious dispatch on the mirror that would otherwise check out an
+  # arbitrary ref. Defense-in-depth: release automation already validates
+  # versions on its side, but manual dispatches in this repo must still
+  # validate here.
+  validate-tag:
+    name: validate tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve tag name
+        id: tag
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          # On workflow_dispatch GITHUB_REF_NAME points at the workflow's
+          # branch, not the tag the operator typed in. Prefer the dispatch
+          # input when set; fall back to the push ref otherwise.
+          TAG="${DISPATCH_TAG:-${GITHUB_REF_NAME}}"
+          if [ -z "$TAG" ]; then
+            echo "No tag resolved (DISPATCH_TAG empty and GITHUB_REF_NAME empty)" >&2
+            exit 1
+          fi
+          # Strict semver-ish pattern. Allows pre-release suffixes
+          # (`v1.2.3-rc.1`, `v1.2.3-beta.2+build.7`) but rejects everything
+          # else, including bare branch names like `main`.
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "Tag '$TAG' does not match the expected vX.Y.Z[-prerelease][+build] pattern" >&2
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Resolved tag=${TAG}"
+
+      - uses: actions/checkout@v5
+        with:
+          # Force tag-namespace resolution: `refs/tags/<tag>` rules out a
+          # same-named branch shadowing the tag at checkout time.
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          # `fetch-depth: 0` so we can ask git whether the ref is really a
+          # tag (rather than a same-named branch). Without history,
+          # `show-ref --tags` reports nothing.
+          fetch-depth: 0
+
+      - name: Assert ref is a tag (not a branch)
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # `git show-ref --verify --quiet refs/tags/$TAG` exits 0 iff the
+          # tag exists locally. After `actions/checkout` with `ref: <TAG>`,
+          # the tag is in the local refs only if it actually exists on the
+          # remote. A branch checkout would not create refs/tags/<TAG>.
+          if ! git show-ref --verify --quiet "refs/tags/${TAG}"; then
+            echo "Ref '${TAG}' is not an existing tag (it may be a branch, or a missing/typo'd tag)" >&2
+            exit 1
+          fi
+          echo "Ref ${TAG} is a tag."
+
+      - name: Assert github.ref matches the dispatched tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          # `workflow_dispatch` invoked without `--ref refs/tags/vX.Y.Z` sets
+          # GITHUB_REF to the workflow file's branch (typically
+          # `refs/heads/main`), even though `inputs.tag` names a tag. npm
+          # provenance (and any future SLSA attestation) signs github.ref
+          # directly: a dispatch against a branch produces attestations whose
+          # sourceRef disagrees with the published tag. Fail fast so the same
+          # invariant holds across all three mirror workflows.
+          EXPECTED="refs/tags/${DISPATCH_TAG}"
+          ACTUAL="${GITHUB_REF}"
+          if [[ "$ACTUAL" != "$EXPECTED" ]]; then
+            cat <<ERR >&2
+          ERROR: workflow_dispatch must run AGAINST the tag, not a branch.
+            Expected GITHUB_REF: $EXPECTED
+            Actual:              $ACTUAL
+
+          Re-dispatch via API with --ref refs/tags/${DISPATCH_TAG}, or via the
+          "Run workflow" UI with the tag selected (NOT the branch). npm
+          provenance signs github.ref directly; a branch dispatch would
+          publish a package whose provenance ref does not match its tag.
+          ERR
+            exit 1
+          fi
+          echo "GITHUB_REF matches dispatched tag: $ACTUAL"
+
+      - name: Assert package.json version matches tag
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          BARE="${TAG#v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$PKG" != "$BARE" ]; then
+            echo "package.json version ($PKG) != tag ($BARE)" >&2
+            exit 1
+          fi
+          echo "package.json version matches tag: $BARE"
+
+      - name: Assert public source has no internal repo references
+        run: node scripts/check-public-refs.mjs .
+
+  build-native:
+    name: build-native (${{ matrix.target }})
+    needs: validate-tag
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            triple: linux-x64-gnu
+            runs-on: ubuntu-latest
+            use-cross: false
+          - target: aarch64-unknown-linux-gnu
+            triple: linux-arm64-gnu
+            runs-on: ubuntu-latest
+            use-cross: true
+          - target: aarch64-apple-darwin
+            triple: darwin-arm64
+            runs-on: macos-latest
+            use-cross: false
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # `refs/tags/<tag>` so checkout resolves to the tag refspec even when
+          # a branch of the same name exists. A bare `${{ inputs.tag }}` would
+          # let git silently prefer a colliding branch over the tag.
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable @ 2026-05-12
+        with:
+          # The matrix target is the npm-package triple; install it plus the
+          # two musl targets used by amla-vm-guest-rootfs's build.rs for guest
+          # binaries. Without the musl targets, any future dep-graph change
+          # that pulls amla-vm-guest-rootfs in would die with:
+          #   error[E0463]: can't find crate for `core`
+          #   help: consider downloading the target with `rustup target add ...`
+          targets: ${{ matrix.target }}, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Install kernel build dependencies
+        # Kalahari can pull in amla-vm-vmm -> amla-vm-guest-rootfs whose
+        # build.rs compiles a Linux kernel as part of the guest rootfs.
+        # The kernel build needs objtool (libelf-dev), module-signing /
+        # BPF (libssl-dev, dwarves), parsers (flex, bison), bc, cpio,
+        # kmod, rsync, and pkg-config. Standard ubuntu-latest already
+        # has gcc/make/perl/python but not these.
+        if: matrix.use-cross == false
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            build-essential pkg-config \
+            libelf-dev libssl-dev dwarves \
+            flex bison bc \
+            cpio kmod rsync
+
+      - name: Install cross
+        if: matrix.use-cross
+        run: cargo install cross --locked
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build ${{ matrix.triple }}
+        if: matrix.use-cross == false
+        run: npm run build:native -- --target=${{ matrix.target }}
+
+      - name: Build ${{ matrix.triple }} (via cross)
+        if: matrix.use-cross
+        env:
+          NAPI_CROSS: "1"
+        run: |
+          # `cross` wraps cargo with a container that has the right sysroot for
+          # the foreign target. napi-rs honors CARGO=cross when it shells out.
+          export CARGO=cross
+          npm run build:native -- --target=${{ matrix.target }}
+
+      - name: Upload ${{ matrix.triple }} artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.triple }}
+          # `amla-hvf-worker` is produced only on macOS (Hypervisor.framework
+          # is darwin-only). On the two Linux matrix legs the file does not
+          # exist; `if-no-files-found: warn` makes that benign rather than a
+          # hard error. There is no path collision when assemble flattens
+          # artifacts because at most one matrix leg (darwin-arm64) emits
+          # this file.
+          #
+          # `native/index.js` and `native/index.d.ts` are napi-rs's
+          # auto-generated wrapper, required at runtime by
+          # `loadNativeBinding()` in src/native.ts. They are emitted by
+          # `napi build` deterministically from the crate definition, so all
+          # three matrix legs produce byte-identical copies; uploading from
+          # each is wasteful but harmless (assemble's download overwrites to
+          # the same content). Without them in the artifact, the assemble
+          # job's `npm pack --ignore-scripts` would ship the main tarball
+          # missing the wrapper and consumers' imports would fail at runtime.
+          path: |
+            native/kalahari.${{ matrix.triple }}.node
+            native/index.js
+            native/index.d.ts
+            native/amla-hvf-worker
+          if-no-files-found: warn
+          retention-days: 7
+
+  assemble:
+    name: assemble
+    needs: build-native
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # `refs/tags/<tag>` so checkout resolves to the tag refspec even when
+          # a branch of the same name exists. A bare `${{ inputs.tag }}` would
+          # let git silently prefer a colliding branch over the tag.
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: native-staging
+
+      - name: Move artifacts into native/
+        run: |
+          mkdir -p native
+          # Each artifact came down as native-staging/native-<triple>/...
+          # Flatten everything into native/. `amla-hvf-worker` only exists in
+          # the darwin-arm64 leg (HVF = macOS Hypervisor.framework), so at
+          # most one copy of it lands here. No collision possible.
+          find native-staging -mindepth 2 -type f -exec cp -v {} native/ \;
+          ls -la native/
+
+      - name: Restore executable bit on amla-hvf-worker
+        # actions/upload-artifact@v4 zips files for transport and the zip
+        # discards Unix file modes; on download the file comes back as 0644
+        # regardless of its original 0755. Without restoring +x here, the
+        # subsequent `npm pack` ships the binary non-executable and runtime
+        # `child_process.spawn("amla-hvf-worker", ...)` on macOS fails with
+        # EACCES. Only `amla-hvf-worker` needs this fix: the `.node` files
+        # are loaded via dlopen and do not require the execute bit.
+        run: |
+          if [ -f native/amla-hvf-worker ]; then
+            chmod +x native/amla-hvf-worker
+            ls -la native/amla-hvf-worker
+          fi
+
+      - name: Install npm dependencies
+        run: npm install
+
+      # Build the TypeScript sources into dist/ explicitly. The main package
+      # is packed below with `--ignore-scripts`, which skips `prepack` (=
+      # `npm run build` = `build:native && tsc`). The native portion has
+      # already been produced in the matrix and copied into native/ above,
+      # but `tsc` still needs to run to populate dist/, which the package's
+      # `files` array (and `main`/`exports`) point at. Without this step the
+      # main tarball ships with no compiled JavaScript.
+      - name: Build TypeScript
+        run: npm run build:ts
+
+      - name: Stage per-arch npm dirs
+        run: npm run prepare:npm-dirs
+
+      # `--ignore-scripts` skips the package's `prepack` (which would re-run
+      # `build:native && tsc`). The native binaries are already in native/
+      # from the matrix and TypeScript was just built above, so re-running
+      # would be wasted work (and `build:native` on this ubuntu runner would
+      # only produce a single host-arch binary, not the matrix set).
+      - name: Pack main package
+        run: npm pack --ignore-scripts
+
+      - name: Pack per-arch sub-packages
+        run: |
+          set -euo pipefail
+          for d in npm/*/; do
+            (cd "$d" && npm pack --ignore-scripts)
+            mv "$d"*.tgz .
+          done
+          ls -la *.tgz
+
+      - name: Assert packed tarballs have no internal repo references
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          for tarball in *.tgz; do
+            dest="$tmp/${tarball%.tgz}"
+            mkdir -p "$dest"
+            tar -xzf "$tarball" -C "$dest"
+          done
+          node scripts/check-public-refs.mjs "$tmp"
+
+      - name: Upload tarballs
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarballs
+          path: "*.tgz"
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: publish to npm
+    needs: assemble
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # `refs/tags/<tag>` so checkout resolves to the tag refspec even when
+          # a branch of the same name exists. A bare `${{ inputs.tag }}` would
+          # let git silently prefer a colliding branch over the tag.
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - name: Set up Node.js (with npm registry auth)
+        uses: actions/setup-node@v4
+        with:
+          # Trusted Publishing requires npm >= 11.5.1 and Node >= 22.14.
+          # Node 22 ships with npm 10, so we also bump npm explicitly below.
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm to a Trusted-Publishing-capable version
+        run: npm install -g npm@latest
+
+      - name: Download tarballs
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-tarballs
+          path: tarballs
+
+      - name: Publish per-arch sub-packages first
+        # No NODE_AUTH_TOKEN: authentication is via npm Trusted Publishing
+        # (OIDC). The job-level `id-token: write` permission lets the npm
+        # CLI exchange the workflow's GitHub OIDC token for a short-lived
+        # registry token automatically. The publisher binding on npmjs.com
+        # for each of the 4 packages is keyed on:
+        #   owner=amlalabs, repo=kalahari, workflow=release.yml.
+        run: |
+          set -euo pipefail
+          # Publish the 3 platform tarballs before the main package. The main
+          # package's prepublishOnly chain validates against the live
+          # registry, so siblings must already be there.
+          #
+          # `--ignore-scripts` is belt-and-suspenders: per-arch sub-packages
+          # have no scripts in their generated package.json, but the flag
+          # protects against accidentally inheriting one in the future, and
+          # mirrors the main publish step below.
+          #
+          # Idempotent re-runs: npm registry publishes are immutable (a
+          # version, once published, can never be re-uploaded with the same
+          # name+version). If a previous run published 2-of-3 siblings and
+          # then failed on the third, a naive re-run would error on the first
+          # two with "You cannot publish over the previously published
+          # versions". Pre-check the registry and skip already-published
+          # tarballs so the re-run can complete the third.
+          shopt -s nullglob
+          for tarball in tarballs/amlalabs-kalahari-linux-x64-gnu-*.tgz \
+                         tarballs/amlalabs-kalahari-linux-arm64-gnu-*.tgz \
+                         tarballs/amlalabs-kalahari-darwin-arm64-*.tgz; do
+            # `npm pack --json` (with no args) inside a package dir prints
+            # the package's intended name+version, but we have only the
+            # tarball. Inspect the tarball's package.json instead.
+            PKG_NAME=$(tar -xzOf "$tarball" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).name")
+            PKG_VERSION=$(tar -xzOf "$tarball" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")
+            if npm view "${PKG_NAME}@${PKG_VERSION}" version --json >/dev/null 2>&1; then
+              echo "${PKG_NAME}@${PKG_VERSION} already on registry; skipping publish (idempotent re-run)."
+            else
+              echo "Publishing $tarball (${PKG_NAME}@${PKG_VERSION})"
+              npm publish --access=public --provenance --ignore-scripts "$tarball"
+            fi
+          done
+
+      # Run the sibling-presence check explicitly between sub-package publish
+      # and main publish. We cannot rely on `prepublishOnly` firing here:
+      # `npm publish <tarball>` operates on a pre-packed archive and skips
+      # both `prepack` and `prepublishOnly`, so the package's built-in
+      # `release:check-siblings` step would otherwise never run.
+      # The script lives at scripts/check-siblings-published.mjs relative to
+      # the (mirror) repo root, which is also the npm package root.
+      - name: Verify per-arch siblings are published
+        run: node scripts/check-siblings-published.mjs
+
+      - name: Publish main package
+        # No NODE_AUTH_TOKEN: see the per-arch publish step above. Same
+        # Trusted Publishing path applies.
+        run: |
+          set -euo pipefail
+          # Main package tarball is `amlalabs-kalahari-<version>.tgz` (without
+          # an arch suffix). Find and publish exactly one.
+          shopt -s nullglob
+          mains=(tarballs/amlalabs-kalahari-[0-9]*.tgz)
+          if [ ${#mains[@]} -ne 1 ]; then
+            echo "Expected exactly 1 main tarball, found ${#mains[@]}" >&2
+            ls -la tarballs/
+            exit 1
+          fi
+          # Idempotent re-run: same rationale as the per-arch step above.
+          # If the previous run published the main package successfully but
+          # then the GitHub Release step failed, a fresh re-run hits the
+          # immutable-registry wall on this exact line. Pre-check and skip.
+          PKG_NAME=$(tar -xzOf "${mains[0]}" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).name")
+          PKG_VERSION=$(tar -xzOf "${mains[0]}" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version --json >/dev/null 2>&1; then
+            echo "${PKG_NAME}@${PKG_VERSION} already on registry; skipping publish (idempotent re-run)."
+          else
+            echo "Publishing main: ${mains[0]} (${PKG_NAME}@${PKG_VERSION})"
+            # `--ignore-scripts`: even though `npm publish <tarball>` skips
+            # lifecycle scripts in current npm versions, set the flag
+            # defensively. The sibling-check that prepublishOnly would have
+            # done was run as a separate step above.
+            npm publish --access=public --provenance --ignore-scripts "${mains[0]}"
+          fi
+
+  create-release:
+    name: create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # `refs/tags/<tag>` so checkout resolves to the tag refspec even when
+          # a branch of the same name exists. A bare `${{ inputs.tag }}` would
+          # let git silently prefer a colliding branch over the tag.
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - name: Download tarballs
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-tarballs
+          path: tarballs
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          # On workflow_dispatch GITHUB_REF_NAME is the workflow branch, not
+          # the tag the operator typed in. Prefer the dispatch input.
+          VERSION="${DISPATCH_TAG:-${GITHUB_REF_NAME}}"
+
+          # Idempotent: existing release -> upload/replace assets; new tag ->
+          # create. A partial re-run (e.g. after a publish-step failure) may
+          # have left a release behind, and `gh release create` is not
+          # tolerant of that.
+          if gh release view "$VERSION" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Release $VERSION exists; uploading assets with --clobber"
+            gh release upload "$VERSION" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber \
+              tarballs/*.tgz
+          else
+            gh release create "$VERSION" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "$VERSION" \
+              --notes "Automated release for $VERSION. See npm for package contents." \
+              tarballs/*.tgz
+          fi

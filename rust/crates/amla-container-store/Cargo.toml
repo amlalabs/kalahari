@@ -1,0 +1,17 @@
+[package]
+name = "amla-container-store"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Content-addressable container image store with pluggable backend"
+
+[dependencies]
+anyhow.workspace = true
+hex.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

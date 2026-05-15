@@ -1,0 +1,21 @@
+[package]
+name = "amla-vm-virtio-console"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Virtio console device for amla-vm"
+
+[lib]
+name = "amla_virtio_console"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-virtio.workspace = true
+bytemuck.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+amla-vm-virtio = { workspace = true, features = ["test-utils"] }
+
+[lints]
+workspace = true

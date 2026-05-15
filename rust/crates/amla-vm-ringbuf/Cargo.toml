@@ -1,0 +1,20 @@
+[package]
+name = "amla-vm-ringbuf"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "SPSC lock-free ring buffer over shared memory — the universal IPC transport in Amla (host↔guest, guest↔guest, and guest-internal)"
+
+[features]
+default = []
+std = []
+
+[dev-dependencies]
+criterion = { workspace = true, features = ["html_reports"] }
+
+[[bench]]
+name = "throughput"
+harness = false
+
+[lints]
+workspace = true

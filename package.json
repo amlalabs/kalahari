@@ -1,0 +1,127 @@
+{
+  "name": "@amlalabs/kalahari",
+  "version": "0.2.2",
+  "description": "Local microVM sandboxes for agent code",
+  "license": "AGPL-3.0-or-later OR BUSL-1.1",
+  "homepage": "https://github.com/amlalabs/kalahari#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amlalabs/kalahari.git"
+  },
+  "bugs": {
+    "url": "https://github.com/amlalabs/kalahari/issues"
+  },
+  "keywords": [
+    "agent",
+    "hypervisor",
+    "isolation",
+    "kvm",
+    "microvm",
+    "oci",
+    "sandbox",
+    "vm"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "kalahari": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./computesdk": {
+      "types": "./dist/computesdk.d.ts",
+      "import": "./dist/computesdk.js"
+    },
+    "./e2b": {
+      "types": "./dist/e2b.d.ts",
+      "import": "./dist/e2b.js"
+    },
+    "./daytona": {
+      "types": "./dist/daytona.d.ts",
+      "import": "./dist/daytona.js"
+    },
+    "./harbor": {
+      "types": "./dist/harbor.d.ts",
+      "import": "./dist/harbor.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "native/index.js",
+    "native/index.d.ts",
+    "native/package.json",
+    "scripts/check-hvf-worker.mjs",
+    "scripts/postinstall.mjs",
+    "LICENSE",
+    "LICENSES",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npm run build:native && tsc -p tsconfig.json && node scripts/copy-augment-dts.mjs",
+    "build:all": "node scripts/build-native.mjs --all && tsc -p tsconfig.json && node scripts/copy-augment-dts.mjs",
+    "build:all-linux": "node scripts/build-native.mjs --all-linux && tsc -p tsconfig.json && node scripts/copy-augment-dts.mjs",
+    "build:ts": "tsc -p tsconfig.json && node scripts/copy-augment-dts.mjs",
+    "build:native": "node scripts/build-native.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "pack:check": "npm pack --dry-run",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run release:check && npm run release:check-publish && npm run release:check-siblings",
+    "prepare:npm-dirs": "node scripts/prepare-npm-dirs.mjs",
+    "postinstall": "node scripts/postinstall.mjs",
+    "release:check-public-refs": "node scripts/check-public-refs.mjs .",
+    "release:verify-native": "node scripts/check-native.mjs",
+    "release:check-siblings": "node scripts/check-siblings-published.mjs",
+    "release:check": "npm run release:check-public-refs && npm test && npm run pack:check",
+    "release:check-publish": "npm run release:check-public-refs && npm run prepare:npm-dirs && npm run release:verify-native && npm run pack:check",
+    "test": "npm run build && node --test tests/*.test.mjs"
+  },
+  "napi": {
+    "binaryName": "kalahari",
+    "triples": {
+      "defaults": false,
+      "addition": [
+        "aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@computesdk/provider": "^2.0.0",
+    "computesdk": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@computesdk/provider": {
+      "optional": true
+    },
+    "computesdk": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {
+    "@amlalabs/kalahari-darwin-arm64": "0.2.2",
+    "@amlalabs/kalahari-linux-arm64-gnu": "0.2.2",
+    "@amlalabs/kalahari-linux-x64-gnu": "0.2.2"
+  },
+  "devDependencies": {
+    "@computesdk/provider": "2.0.0",
+    "@napi-rs/cli": "^3.6.2",
+    "@types/node": "^25.6.0",
+    "computesdk": "^4.0.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

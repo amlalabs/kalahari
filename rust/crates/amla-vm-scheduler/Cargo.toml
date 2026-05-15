@@ -1,0 +1,39 @@
+[package]
+name = "amla-vm-scheduler"
+description = "Scheduler-owned VM API with backend pool management and VM multiplexing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "amla_vm_scheduler"
+
+[features]
+default = []
+usernet = ["amla-vm-vmm/usernet"]
+subprocess = ["amla-vm-vmm/subprocess"]
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-constants.workspace = true
+amla-vm-fuse.workspace = true
+amla-vm-vmm.workspace = true
+log.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time"] }
+
+[dev-dependencies]
+amla-vm-guest-rootfs = { workspace = true, features = ["test-binaries"] }
+amla-vm-mem.workspace = true
+amla-vm-erofs.workspace = true
+amla-vm-usernet.workspace = true
+amla-vm-tls-proxy-net.workspace = true
+amla-vm-interceptor.workspace = true
+amla-vm-policy-net.workspace = true
+amla-vm-constants.workspace = true
+amla-vm-core.workspace = true
+env_logger.workspace = true
+tokio = { workspace = true, features = ["test-util", "macros", "rt-multi-thread"] }
+
+[lints]
+workspace = true

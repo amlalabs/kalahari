@@ -1,0 +1,42 @@
+[package]
+name = "amla-vm-hvf"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "macOS Hypervisor.framework backend for amla-vm"
+
+[lib]
+name = "amla_hvf"
+
+[features]
+default = []
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-boot.workspace = true
+amla-vm-mem.workspace = true
+bytemuck.workspace = true
+thiserror.workspace = true
+log.workspace = true
+
+# Dependencies for the real HVF implementation (macOS aarch64).
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+amla-vm-gic.workspace = true
+amla-vm-ipc.workspace = true
+tokio = { workspace = true, features = ["sync", "rt", "rt-multi-thread", "time"] }
+tokio-util.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+postcard.workspace = true
+libc.workspace = true
+env_logger.workspace = true
+nonmax.workspace = true
+console-subscriber.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+[[bin]]
+name = "amla-hvf-worker"
+path = "src/bin/amla-hvf-worker.rs"
+
+[lints]
+workspace = true

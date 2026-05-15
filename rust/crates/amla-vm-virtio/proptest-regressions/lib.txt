@@ -1,0 +1,12 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+# These seeds exercise the zero-address rejection path: desc_table=0,
+# avail_ring=0, used_ring=0 are now correctly rejected by the non-zero
+# alignment checks added in restore(). The seeds are kept to verify
+# that the rejection logic continues to work.
+cc 8afa39722a2d3fd46daf8442f1ce558514f7ab8b35d157312214b51d895fdd82 # shrinks to (snap, mem_size) = (VirtQueueSnapshot { size: 1, desc_table: 0, avail_ring: 0, used_ring: 0, last_avail_idx: 0, next_used_idx: 0 }, 4130)
+cc 2a7b0c22c9890db6869b77fcdf8981fa04ede9934513fdc1f1f8635a08defdac # shrinks to (snap, mem_size) = (VirtQueueSnapshot { size: 1, desc_table: 0, avail_ring: 0, used_ring: 0, last_avail_idx: 0, next_used_idx: 0 }, 4130)

@@ -1,0 +1,427 @@
+[workspace]
+resolver = "3"
+members = [
+    # ── amla-vm ──
+    "crates/amla-vm-boot",
+    "crates/amla-vm-composite-fs",
+    "crates/amla-vm-constants",
+    "crates/amla-vm-core",
+    "crates/amla-vm-cowtree",
+    "crates/amla-vm-erofs",
+    "crates/amla-vm-fuse",
+    "crates/amla-vm-fuse-abi",
+    "crates/amla-vm-gic",
+    "crates/amla-vm-guest-rootfs",
+    "crates/amla-vm-hvf",
+    "crates/amla-vm-hyperv",
+    "crates/amla-vm-interceptor",
+    "crates/amla-vm-ipc",
+    "crates/amla-vm-ipc-derive",
+    "crates/amla-vm-kvm",
+    "crates/amla-vm-mem",
+    "crates/amla-vm-policy-net",
+    "crates/amla-vm-redbfs",
+    "crates/amla-vm-scheduler",
+    "crates/amla-vm-stub",
+    "crates/amla-vm-synthesized-fs",
+    "crates/amla-vm-tls-parse",
+    "crates/amla-vm-tls-proxy-net",
+    "crates/amla-vm-usernet",
+    "crates/amla-vm-virtio",
+    "crates/amla-vm-virtio-console",
+    "crates/amla-vm-virtio-fs",
+    "crates/amla-vm-virtio-mmio",
+    "crates/amla-vm-virtio-net",
+    "crates/amla-vm-virtio-pmem",
+    "crates/amla-vm-virtio-rng",
+    "crates/amla-vm-vmm",
+    "crates/kalahari",
+
+    # ── amla-ax ──
+
+    # ── amla-oci ──
+    "crates/amla-oci",
+
+    # ── amla-container ──
+    "crates/amla-container",
+    "crates/amla-container-store",
+    "crates/amla-container-engine",
+
+    # ── amla-protocol ──
+
+    # ── amla-sandbox ──
+
+    # ── infer-market ──
+
+    # ── guest (VM + container, cross-compiled for musl) ──
+    "crates/amla-vm-ringbuf",
+    "crates/amla-guest",
+]
+[workspace.package]
+# Placeholder. The real release version is injected at extract time by
+# scripts/extract-mirror.py (driven by the release-vX.Y.Z tag).
+# See mirrors/README.md for the release flow.
+version = "0.2.2"
+edition = "2024"
+license = "AGPL-3.0-or-later OR BUSL-1.1"
+authors = ["Amla Labs <hi@amlalabs.com>"]
+
+# ============================================================================
+# Workspace dependencies (merged from all former workspaces)
+# ============================================================================
+
+[workspace.dependencies]
+
+# ── Internal crates (amla-vm) ──
+amla-vm-boot = { path = "crates/amla-vm-boot" }
+amla-vm-composite-fs = { path = "crates/amla-vm-composite-fs" }
+amla-vm-constants = { path = "crates/amla-vm-constants" }
+amla-vm-core = { path = "crates/amla-vm-core" }
+amla-vm-cowtree = { path = "crates/amla-vm-cowtree" }
+amla-vm-erofs = { path = "crates/amla-vm-erofs" }
+amla-vm-fuse = { path = "crates/amla-vm-fuse" }
+amla-vm-fuse-abi = { path = "crates/amla-vm-fuse-abi" }
+amla-vm-gic = { path = "crates/amla-vm-gic" }
+amla-vm-guest-rootfs = { path = "crates/amla-vm-guest-rootfs" }
+amla-vm-hvf = { path = "crates/amla-vm-hvf" }
+amla-vm-hyperv = { path = "crates/amla-vm-hyperv" }
+amla-vm-interceptor = { path = "crates/amla-vm-interceptor" }
+amla-vm-ipc = { path = "crates/amla-vm-ipc" }
+amla-vm-ipc-derive = { path = "crates/amla-vm-ipc-derive" }
+amla-vm-kvm = { path = "crates/amla-vm-kvm" }
+amla-vm-mem = { path = "crates/amla-vm-mem" }
+amla-vm-policy-net = { path = "crates/amla-vm-policy-net" }
+amla-vm-redbfs = { path = "crates/amla-vm-redbfs" }
+amla-vm-scheduler = { path = "crates/amla-vm-scheduler" }
+amla-vm-stub = { path = "crates/amla-vm-stub" }
+amla-vm-synthesized-fs = { path = "crates/amla-vm-synthesized-fs" }
+amla-vm-tls-parse = { path = "crates/amla-vm-tls-parse" }
+amla-vm-tls-proxy-net = { path = "crates/amla-vm-tls-proxy-net" }
+amla-vm-usernet = { path = "crates/amla-vm-usernet" }
+amla-vm-virtio = { path = "crates/amla-vm-virtio" }
+amla-vm-virtio-console = { path = "crates/amla-vm-virtio-console" }
+amla-vm-virtio-fs = { path = "crates/amla-vm-virtio-fs" }
+amla-vm-virtio-mem = { path = "crates/amla-vm-virtio-mem" }
+amla-vm-virtio-mmio = { path = "crates/amla-vm-virtio-mmio" }
+amla-vm-virtio-net = { path = "crates/amla-vm-virtio-net" }
+amla-vm-virtio-pmem = { path = "crates/amla-vm-virtio-pmem" }
+amla-vm-virtio-rng = { path = "crates/amla-vm-virtio-rng" }
+amla-vm-vmm = { path = "crates/amla-vm-vmm", features = ["usernet"] }
+kalahari = { path = "crates/kalahari" }
+
+# ── Internal crates (amla-ax) ──
+amla-ax-agents = { path = "crates/amla-ax-agents" }
+amla-ax-bin = { path = "crates/amla-ax-bin" }
+amla-ax-cli = { path = "crates/amla-ax-cli" }
+amla-ax-store = { path = "crates/amla-ax-store" }
+amla-ax-daemon = { path = "crates/amla-ax-daemon" }
+amla-ax-frontend = { path = "crates/amla-ax-frontend" }
+amla-ax-gitfs = { path = "crates/amla-ax-gitfs" }
+amla-ax-mcp = { path = "crates/amla-ax-mcp" }
+amla-ax-sniffer = { path = "crates/amla-ax-sniffer" }
+
+# ── Internal crates (amla-oci) ──
+amla-oci = { path = "crates/amla-oci" }
+
+# ── Internal crates (amla-container) ──
+amla-container = { path = "crates/amla-container" }
+amla-container-store = { path = "crates/amla-container-store" }
+amla-vm-terminal = { path = "crates/amla-vm-terminal" }
+amla-container-engine = { path = "crates/amla-container-engine" }
+amla-container-cli = { path = "crates/amla-container-cli" }
+amla-container-cli-bin = { path = "crates/amla-container-cli-bin" }
+
+# ── Internal crates (amla-protocol) ──
+amla-protocol = { path = "crates/amla-protocol" }
+amla-protocol-capabilities = { path = "crates/amla-protocol-capabilities" }
+amla-protocol-constraints = { path = "crates/amla-protocol-constraints" }
+
+# ── Internal crates (amla-sandbox) ──
+amla-sandbox = { path = "crates/amla-sandbox" }
+amla-sandbox-audit = { path = "crates/amla-sandbox-audit" }
+amla-sandbox-js = { path = "crates/amla-sandbox-js" }
+amla-sandbox-scheduler = { path = "crates/amla-sandbox-scheduler" }
+amla-sandbox-shell = { path = "crates/amla-sandbox-shell" }
+amla-sandbox-tools = { path = "crates/amla-sandbox-tools" }
+amla-sandbox-vfs = { path = "crates/amla-sandbox-vfs" }
+
+# ── Internal crates (infer-market) ──
+infer-shared = { path = "crates/infer-shared" }
+infer-store = { path = "crates/infer-store" }
+infer-seller-core = { path = "crates/infer-seller-core" }
+infer-relay-core = { path = "crates/infer-relay-core" }
+infer-worker-core = { path = "crates/infer-worker-core" }
+
+# ── Internal crates (guest) ──
+amla-vm-ringbuf = { path = "crates/amla-vm-ringbuf" }
+
+# ── Async runtime ──
+tokio = { version = "1.43", features = ["full", "parking_lot"] }
+tokio-util = "0.7"
+async-trait = "0.1"
+trait-variant = "0.1"
+futures = "0.3"
+futures-util = "0.3"
+
+# ── Concurrency ──
+crossbeam = "0.8"
+parking_lot = "0.12"
+event-listener = "5.4"
+
+# ── Error handling ──
+thiserror = "2.0"
+
+# ── Logging / tracing ──
+log = "0.4"
+env_logger = "0.11"
+console-subscriber = "0.4"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# ── Serialization ──
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+postcard = { version = "1.0", features = ["alloc"] }
+ciborium = "0.2"
+toml = "0.8"
+
+# ── Byte casting ──
+bytemuck = { version = "1.21", features = ["derive", "min_const_generics"] }
+
+# ── Integers ──
+nonmax = "0.5"
+
+# ── Small optimizations ──
+smallvec = "1.13"
+
+# ── libc / low-level Unix ──
+libc = "0.2"
+rustix = "1.0"
+
+# ── KVM ──
+kvm-ioctls = "0.19"
+kvm-bindings = { version = "0.10", features = ["fam-wrappers"] }
+
+# ── HTTP ──
+axum = { version = "0.8", features = ["ws"] }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+hyper = { version = "1.5", features = ["server", "client", "http1", "http2"] }
+hyper-util = { version = "0.1", features = ["tokio", "server", "client", "client-legacy", "http1", "http2"] }
+h2 = "0.4"
+http = "1.1"
+http-body = "1"
+http-body-util = "0.1"
+bytes = "1"
+
+# ── WebSocket ──
+tokio-tungstenite = "0.28"
+
+# ── Terminal ──
+crossterm = { version = "0.28", features = ["event-stream"] }
+indicatif = "0.18"
+vt100 = "0.16"
+
+# ── CLI ──
+clap = { version = "4", features = ["derive"] }
+
+# ── TLS / crypto ──
+rustls = { version = "0.23", default-features = false, features = ["std", "tls12", "ring"] }
+sha2 = "0.10"
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+rand = "0.9"
+
+# ── Git ──
+gix = { version = "0.80", features = ["parallel", "index"] }
+
+# ── Database ──
+redb = "3"
+
+# ── Cache ──
+lru = "0.16"
+
+# ── Time ──
+chrono = { version = "0.4", features = ["serde"] }
+
+# ── Memory-mapped I/O ──
+memmap2 = "0.9"
+
+# ── Compression ──
+lz4_flex = "0.11"
+
+# ── Allocator ──
+mimalloc = "0.1"
+
+# ── File system ──
+tempfile = "3"
+dirs = "5"
+
+# ── Testing / benchmarks ──
+proptest = "1.5"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# ── Windows ──
+windows-sys = "0.60"
+
+# ── WASM ──
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
+# ============================================================================
+# Lints (common subset — stricter rules are per-crate)
+# ============================================================================
+
+
+# ── Additional dependencies (unified) ──
+anyhow = "1"
+async-stream = "0.3"
+base64 = "0.22"
+blake3 = "1.5"
+cc = "1.0"
+cfg-if = "1"
+etherparse = "0.16"
+fastrand = "2.3"
+flate2 = "1"
+goblin = "0.9"
+hex = "0.4"
+hmac = "0.12"
+httparse = "1.9"
+jaq-core = "1"
+jaq-interpret = "1"
+jaq-parse = "1"
+jaq-std = "1"
+k256 = { version = "0.13", features = ["ecdsa"] }
+lexopt = "0.3"
+mime_guess = "2"
+napi = { version = "3", default-features = false, features = ["napi9", "tokio_rt"] }
+napi-build = "2"
+napi-derive = "3"
+pollster = "0.4"
+proc-macro2 = "1"
+quote = "1"
+rcgen = { version = "0.13", default-features = false, features = ["pem", "ring"] }
+regex = "1"
+ring = { version = "0.17", features = ["wasm32_unknown_unknown_js"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+rust-embed = { version = "8", features = ["interpolate-folder-path"] }
+rustls-pemfile = "2"
+rustls-pki-types = { version = "1", features = ["web"] }
+safetensors = "0.5"
+seccompiler = "0.4"
+serde-wasm-bindgen = "0.6"
+serde_bytes = "0.11"
+sha1_smol = "1"
+smoltcp = { version = "0.13", default-features = false }
+socket2 = { version = "0.6", features = ["all"] }
+syn = { version = "2", features = ["extra-traits", "full"] }
+tabled = "0.17"
+tar = "0.4"
+tiny-keccak = { version = "2.0", features = ["keccak"] }
+tokenizers = { version = "0.21", default-features = false, features = ["unstable_wasm"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
+tower = { version = "0.5", features = ["util"] }
+tracking-allocator = "0.4"
+trybuild = "1"
+uuid = { version = "1", features = ["v4"] }
+vm-fdt = "0.3"
+vmm-sys-util = "0.12"
+wasm-bindgen-futures = "0.4"
+wasm-bindgen-test = "0.3"
+wayland-protocols = "0.32"
+wayland-server = "0.31"
+webpki-roots = "1.0"
+worker = { version = "0.7", features = ["d1", "http"] }
+zeroize = "1.7"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -2 }
+style = { level = "deny", priority = -2 }
+# Nursery: still-incubating lints. Upstream marks them experimental, but
+# in this workspace they catch real defects (slow_vector_initialization,
+# significant_drop_tightening, debug_assert_with_mut_call) so we enable
+# the category at deny.
+nursery = { level = "deny", priority = -2 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+# Silently discarding a `Result` (or any `#[must_use]` type) via `let _ = ...`
+# is the most common shape of silent failure in this workspace — virtqueue
+# kick notifications, IPC sends, console writes, conntrack inserts have all
+# shipped bugs rooted in ignored errors. Force an explicit choice: propagate,
+# handle, or opt out with a narrow `#[allow]` + rationale.
+let_underscore_must_use = "deny"
+# Ban intentional leaks. `mem_forget` covers std::mem::forget; the *::leak
+# family (Box::leak, Vec::leak, String::leak) is enforced via
+# disallowed_methods reading clippy.toml at the workspace root.
+mem_forget = "deny"
+disallowed_methods = "deny"
+# Every `unsafe { ... }` block must carry a `// SAFETY:` comment explaining
+# which invariants the caller is relying on. Forbid (not deny) is the
+# workspace default so that new crates are strict by construction and no
+# one can `#[allow]` past it. Clap derive macros emit
+# `#[allow(clippy::restriction)]` in their expansion, which clashes with
+# `forbid` (E0453, allow-inside-forbid) — so clap-using crates relax this
+# back to `deny` in their own `[lints.clippy]` tables
+# (see amla-ax-bin, amla-ax-agents, amla-container-cli-bin, infer-seller).
+undocumented_unsafe_blocks = "forbid"
+# Pedantic overrides
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+# Backend/stub trait impls (HVF on non-macOS, Hyper-V on non-Windows, mock)
+# declare `async fn` to match the single BackendVm contract emitted by
+# `define_backend!`, but their bodies never `.await`. Splitting the trait
+# into Sync/Async variants would add real dispatch complexity in hot paths
+# for zero runtime win (stubs are `#[cfg]`-gated dead code). Silencing the
+# lint here removes ~40 noisy per-site allows without touching the design.
+unused_async = "allow"
+# Large test/bench harnesses for VM lifecycle compose deeply-nested async
+# state machines (build → map_memory → restore_state → resume). The future
+# size is a property of composition depth, not algorithmic complexity, so
+# splitting the tests doesn't shrink the future. Workspace-level allow
+# keeps `cargo bench`/`cargo test` quiet without per-file blanket allows.
+large_futures = "allow"
+
+# ============================================================================
+# Profile overrides
+# ============================================================================
+
+[profile.release.package.amla-vm-hvf]
+strip = false
+
+# amla-container-cli-bin embeds entitlements and is codesigned by the
+# linker wrapper; rustc's post-link strip would invalidate the signature.
+[profile.release.package.amla-container-cli-bin]
+strip = false
+
+# WASM-targeted crates need size optimization
+[profile.release.package.amla-sandbox]
+opt-level = "z"
+strip = true
+
+[profile.release.package.amla-protocol]
+opt-level = "z"
+strip = true
+
+[profile.release.package.amla-protocol-capabilities]
+opt-level = "z"
+strip = true
+
+[profile.release.package.amla-protocol-constraints]
+opt-level = "z"
+strip = true
+
+[profile.release.package.infer-router]
+opt-level = "s"
+
+# ============================================================================
+# Patched crates
+# ============================================================================
+
+[patch.crates-io]
+libmimalloc-sys = { path = "vendor/libmimalloc-sys" }

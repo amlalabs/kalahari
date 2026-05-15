@@ -1,0 +1,99 @@
+From: Souvik Banerjee <souvik@amlalabs.com>
+Date: Fri, 8 May 2026 00:00:00 +0000
+Subject: [PATCH v2] fs/dax: check for empty/zero entries before calling
+ pfn_to_page()
+
+Commit 98c183a4fccf ("fs/dax: don't disassociate zero page entries")
+added zero/empty-entry early returns to dax_associate_entry() and
+dax_disassociate_entry(), but placed them *after* the
+`struct folio *folio = dax_to_folio(entry);` line.  dax_to_folio()
+expands to page_folio(pfn_to_page(dax_to_pfn(entry))), which calls
+_compound_head() and performs READ_ONCE(page->compound_info) -- a real
+dereference of the struct page pointer derived from a bogus PFN
+extracted from the empty/zero XA value.
+
+On systems where vmemmap covers all of RAM that dereference reads
+garbage and is harmless: the early return then discards the result.
+On virtio-pmem with altmap (vmemmap stored inside the device), only
+the real device PFN range is mapped, so the dereference triggers a
+kernel paging fault from the truncate / invalidate path and from the
+PMD-downgrade branch of dax_iomap_pte_fault when an entry is being
+freed:
+
+  Unable to handle kernel paging request at
+  virtual address ffff_fdff_bf00_0008 (vmemmap region)
+  Call trace:
+   dax_disassociate_entry.isra.0+0x20/0x50
+   dax_iomap_pte_fault
+   dax_iomap_fault
+   erofs_dax_fault
+
+Close the residual gap by moving the dax_to_folio() call after the
+zero/empty guard in both dax_associate_entry() and
+dax_disassociate_entry().  Apply the same treatment to dax_busy_page(),
+which has the identical pattern but was not touched by the prior fix.
+dax_associate_entry() is reachable with a zero entry via
+dax_insert_entry() -> dax_associate_entry(new_entry, ...), where
+new_entry can carry DAX_ZERO_PAGE (built by dax_make_entry() in
+dax_load_hole() / dax_pmd_load_hole()).  dax_disassociate_entry() and
+dax_busy_page() additionally see DAX_EMPTY entries created by
+grab_mapping_entry().
+
+The remaining users of dax_to_folio() / dax_to_pfn() in fs/dax.c are
+either guarded or only reachable on real-PFN entries, so this exhausts
+the anti-pattern.
+
+Fixes: 98c183a4fccf ("fs/dax: don't disassociate zero page entries")
+Fixes: 38607c62b34b ("fs/dax: properly refcount fs dax pages")
+Cc: stable@vger.kernel.org # v6.15+
+Cc: Alistair Popple <apopple@nvidia.com>
+Suggested-by: David Hildenbrand <david@kernel.org>
+Signed-off-by: Souvik Banerjee <souvik@amlalabs.com>
+---
+ fs/dax.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -480,12 +480,13 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
+ 				struct vm_area_struct *vma,
+ 				unsigned long address, bool shared)
+ {
+ 	unsigned long size = dax_entry_size(entry), index;
+-	struct folio *folio = dax_to_folio(entry);
++	struct folio *folio;
+
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry))
+ 		return;
+
++	folio = dax_to_folio(entry);
+ 	index = linear_page_index(vma, address & ~(size - 1));
+ 	if (shared && (folio->mapping || dax_folio_is_shared(folio))) {
+ 		if (folio->mapping)
+@@ -505,21 +506,23 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
+ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+ 				bool trunc)
+ {
+-	struct folio *folio = dax_to_folio(entry);
++	struct folio *folio;
+
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry))
+ 		return;
+
++	folio = dax_to_folio(entry);
+ 	dax_folio_put(folio);
+ }
+
+ static struct page *dax_busy_page(void *entry)
+ {
+-	struct folio *folio = dax_to_folio(entry);
++	struct folio *folio;
+
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry))
+ 		return NULL;
+
++	folio = dax_to_folio(entry);
+ 	if (folio_ref_count(folio) - folio_mapcount(folio))
+ 		return &folio->page;
+ 	else

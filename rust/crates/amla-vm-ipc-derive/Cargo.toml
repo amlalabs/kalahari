@@ -1,0 +1,17 @@
+[package]
+name = "amla-vm-ipc-derive"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "amla_ipc_derive"
+proc-macro = true
+
+[dependencies]
+proc-macro2.workspace = true
+quote.workspace = true
+syn = { workspace = true, features = ["full", "extra-traits"] }
+
+[lints]
+workspace = true

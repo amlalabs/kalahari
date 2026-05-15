@@ -1,0 +1,25 @@
+[package]
+name = "amla-vm-policy-net"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Policy-based network filtering with protocol inspection"
+
+[lib]
+name = "amla_policy_net"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-tls-parse.workspace = true
+log.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+thiserror.workspace = true
+parking_lot.workspace = true
+
+[dev-dependencies]
+amla-vm-constants.workspace = true
+proptest.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,33 @@
+error: lifetime may not live long enough
+  --> tests/ui/completion_cannot_cross_queue_brand.rs:10:13
+   |
+ 6 | fn completion_cannot_cross_queue_brand<'left, 'right, 'q, 'm, M: GuestMemory>(
+   |                                        -----  ------ lifetime `'right` defined here
+   |                                        |
+   |                                        lifetime `'left` defined here
+...
+10 |     let _ = view.push(completion);
+   |             ^^^^^^^^^^^^^^^^^^^^^ argument requires that `'left` must outlive `'right`
+   |
+   = help: consider adding the following bound: `'left: 'right`
+   = note: requirement occurs because of the type `CompletedDescriptorChain<'_>`, which makes the generic argument `'_` invariant
+   = note: the struct `CompletedDescriptorChain<'brand>` is invariant over the parameter `'brand`
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
+
+error: lifetime may not live long enough
+  --> tests/ui/completion_cannot_cross_queue_brand.rs:10:13
+   |
+ 6 | fn completion_cannot_cross_queue_brand<'left, 'right, 'q, 'm, M: GuestMemory>(
+   |                                        -----  ------ lifetime `'right` defined here
+   |                                        |
+   |                                        lifetime `'left` defined here
+...
+10 |     let _ = view.push(completion);
+   |             ^^^^^^^^^^^^^^^^^^^^^ argument requires that `'right` must outlive `'left`
+   |
+   = help: consider adding the following bound: `'right: 'left`
+   = note: requirement occurs because of a mutable reference to `QueueView<'_, '_, '_, M>`
+   = note: mutable references are invariant over their type parameter
+   = help: see <https://doc.rust-lang.org/nomicon/subtyping.html> for more information about variance
+
+help: `'left` and `'right` must be the same: replace one with the other

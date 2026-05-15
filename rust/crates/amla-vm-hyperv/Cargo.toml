@@ -1,0 +1,18 @@
+[package]
+name = "amla-vm-hyperv"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Windows Hyper-V backend for amla-vm (stub)"
+
+[lib]
+name = "amla_hyperv"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-boot.workspace = true
+amla-vm-mem.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,21 @@
+[package]
+name = "amla-vm-virtio-net"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Virtio network device with pluggable backends"
+
+[lib]
+name = "amla_virtio_net"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-virtio.workspace = true
+bytemuck.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+amla-vm-virtio = { workspace = true, features = ["test-utils"] }
+
+[lints]
+workspace = true

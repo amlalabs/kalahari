@@ -1,0 +1,25 @@
+[package]
+name = "amla-vm-boot"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Platform-agnostic Linux boot protocol with arch-specific backends (x86_64, ARM64)"
+
+[lib]
+name = "amla_boot"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-mem.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+amla-vm-virtio-mmio.workspace = true
+goblin.workspace = true
+log.workspace = true
+
+[target.'cfg(target_arch = "aarch64")'.dependencies]
+vm-fdt.workspace = true
+
+[lints]
+workspace = true

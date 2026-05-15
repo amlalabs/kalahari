@@ -1,0 +1,30 @@
+[package]
+name = "amla-vm-virtio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Virtio queue implementation with security hardening"
+
+[lib]
+name = "amla_virtio"
+
+[dependencies]
+amla-vm-core.workspace = true
+bytemuck = { workspace = true, features = ["derive"] }
+log.workspace = true
+
+[features]
+test-utils = []
+
+[dev-dependencies]
+criterion.workspace = true
+proptest.workspace = true
+trybuild.workspace = true
+
+[[bench]]
+name = "queue_hot_path"
+harness = false
+required-features = ["test-utils"]
+
+[lints]
+workspace = true

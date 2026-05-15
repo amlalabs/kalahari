@@ -1,0 +1,16 @@
+[package]
+name = "amla-vm-gic"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "ARM GICv3 interrupt controller model for amla-vm"
+
+[dependencies]
+amla_core = { package = "amla-vm-core", path = "../amla-vm-core" }
+amla-vm-boot.workspace = true
+bytemuck.workspace = true
+parking_lot.workspace = true
+log.workspace = true
+
+[lints]
+workspace = true

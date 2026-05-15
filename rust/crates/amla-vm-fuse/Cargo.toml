@@ -1,0 +1,23 @@
+[package]
+name = "amla-vm-fuse"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FUSE protocol types and dispatch for amla-vm virtio-fs"
+
+[lib]
+name = "amla_fuse"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-fuse-abi.workspace = true
+amla-vm-virtio.workspace = true
+bytemuck = { workspace = true, features = ["derive", "min_const_generics"] }
+trait-variant.workspace = true
+log.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+amla-vm-mem.workspace = true
+
+[lints]
+workspace = true

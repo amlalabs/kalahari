@@ -1,0 +1,16 @@
+error[E0382]: use of moved value: `vm`
+  --> tests/ui/freeze_after_run.rs:10:13
+   |
+ 7 | async fn try_freeze_after_run(vm: VirtualMachine<Ready<'_, amla_fuse::NullFsBackend>>) {
+   |                               -- move occurs because `vm` has type `VirtualMachine<amla_vmm::Ready<'_, NullFsBackend>>`, which does not implement the `Copy` trait
+ 8 |     let _ = vm.run(async |_vm| ()).await;
+   |                ------------------- `vm` moved due to this method call
+ 9 |     // ERROR: use of moved value: `vm`
+10 |     let _ = vm.freeze().await;
+   |             ^^ value used here after move
+   |
+note: `VirtualMachine::<amla_vmm::Ready<'a, F, N>>::run` takes ownership of the receiver `self`, which moves `vm`
+  --> src/machine.rs
+   |
+   |     pub async fn run<Fn, R>(self, f: Fn) -> Result<(VirtualMachine<Ready<'a, F, N>>, R)>
+   |                             ^^^^

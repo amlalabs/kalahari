@@ -1,0 +1,18 @@
+[package]
+name = "amla-vm-virtio-mmio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Virtio MMIO transport layer (virtio 1.0+)"
+
+[lib]
+name = "amla_virtio_mmio"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-virtio.workspace = true
+bytemuck.workspace = true
+log.workspace = true
+
+[lints]
+workspace = true

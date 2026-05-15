@@ -1,0 +1,20 @@
+[package]
+name = "amla-vm-virtio-pmem"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Virtio persistent memory device (virtio-pmem) for amla-vm"
+
+[lib]
+name = "amla_virtio_pmem"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-virtio.workspace = true
+bytemuck.workspace = true
+
+[dev-dependencies]
+amla-vm-virtio = { workspace = true, features = ["test-utils"] }
+
+[lints]
+workspace = true

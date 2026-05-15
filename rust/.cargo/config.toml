@@ -1,0 +1,32 @@
+# Cargo configuration for the unified Rust workspace
+
+[build]
+rustflags = ["--cfg", "tokio_unstable"]
+
+[target.aarch64-apple-darwin]
+linker = "tools/link-and-sign.sh"
+
+[target.x86_64-pc-windows-msvc]
+linker = "lld-link"
+rustflags = ["-Lnative=/home/vscode/.xwin/crt/lib/x86_64", "-Lnative=/home/vscode/.xwin/sdk/lib/um/x86_64", "-Lnative=/home/vscode/.xwin/sdk/lib/ucrt/x86_64", "-Clink-arg=/LIBPATH:/home/vscode/.xwin/crt/lib/x86_64", "-Clink-arg=/LIBPATH:/home/vscode/.xwin/sdk/lib/um/x86_64", "-Clink-arg=/LIBPATH:/home/vscode/.xwin/sdk/lib/ucrt/x86_64"]
+
+[target.aarch64-pc-windows-msvc]
+linker = "lld-link"
+rustflags = ["-Lnative=/home/vscode/.xwin/crt/lib/aarch64", "-Lnative=/home/vscode/.xwin/sdk/lib/um/aarch64", "-Lnative=/home/vscode/.xwin/sdk/lib/ucrt/aarch64", "-Clink-arg=/LIBPATH:/home/vscode/.xwin/crt/lib/aarch64", "-Clink-arg=/LIBPATH:/home/vscode/.xwin/sdk/lib/um/aarch64", "-Clink-arg=/LIBPATH:/home/vscode/.xwin/sdk/lib/ucrt/aarch64"]
+
+[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-gnu-gcc"
+
+[target.aarch64-unknown-linux-musl]
+linker = "aarch64-linux-gnu-gcc"
+
+[env]
+# macOS aarch64 cross-compilation: use zig cc for C code (ring, etc.)
+CC_aarch64_apple_darwin = { value = "tools/zig-cc-aarch64-macos.sh", relative = true }
+AR_aarch64_apple_darwin = { value = "tools/ar-aarch64-macos.sh", relative = true }
+
+# Windows cross-compilation: MSVC CRT + SDK headers via xwin
+CFLAGS_x86_64_pc_windows_msvc = "-isystem /home/vscode/.xwin/crt/include -isystem /home/vscode/.xwin/sdk/include/ucrt -isystem /home/vscode/.xwin/sdk/include/um -isystem /home/vscode/.xwin/sdk/include/shared"
+CFLAGS_aarch64_pc_windows_msvc = "-isystem /home/vscode/.xwin/crt/include -isystem /home/vscode/.xwin/sdk/include/ucrt -isystem /home/vscode/.xwin/sdk/include/um -isystem /home/vscode/.xwin/sdk/include/shared"
+AR_x86_64_pc_windows_msvc = "llvm-lib"
+AR_aarch64_pc_windows_msvc = "llvm-lib"

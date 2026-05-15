@@ -1,0 +1,21 @@
+[package]
+name = "amla-vm-virtio-rng"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Virtio entropy device (virtio-rng) for amla-vm"
+
+[lib]
+name = "amla_virtio_rng"
+
+[dependencies]
+amla-vm-core.workspace = true
+amla-vm-virtio.workspace = true
+bytemuck.workspace = true
+getrandom.workspace = true
+
+[dev-dependencies]
+amla-vm-virtio = { workspace = true, features = ["test-utils"] }
+
+[lints]
+workspace = true

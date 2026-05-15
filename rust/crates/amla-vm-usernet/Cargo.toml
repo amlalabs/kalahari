@@ -1,0 +1,46 @@
+[package]
+name = "amla-vm-usernet"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "User-mode networking stack (smoltcp-based, slirp-like)"
+
+[lib]
+name = "amla_usernet"
+
+[dependencies]
+amla-vm-interceptor.workspace = true
+amla-vm-constants.workspace = true
+amla-vm-core.workspace = true
+log.workspace = true
+serde = { workspace = true, features = ["derive"] }
+thiserror.workspace = true
+parking_lot.workspace = true
+smoltcp = { workspace = true, default-features = false, features = [
+    "std",
+    "alloc",
+    "medium-ethernet",
+    "proto-ipv4",
+    "proto-ipv6",
+    "proto-dhcpv4",
+    "socket-tcp",
+    "socket-udp",
+    "socket-icmp",
+    "socket-dhcpv4",
+] }
+
+socket2 = { workspace = true, features = ["all"] }
+tokio = { workspace = true, features = ["net", "rt", "sync", "time"] }
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+amla-vm-tls-proxy-net.workspace = true
+amla-vm-core.workspace = true
+rustls.workspace = true
+http.workspace = true
+env_logger.workspace = true
+
+[lints]
+workspace = true

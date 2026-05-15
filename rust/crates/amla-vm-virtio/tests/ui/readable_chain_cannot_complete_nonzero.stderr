@@ -1,0 +1,11 @@
+error[E0599]: no method named `complete` found for struct `ReadableDescriptorChain<'brand, 'm, M>` in the current scope
+  --> tests/ui/readable_chain_cannot_complete_nonzero.rs:10:29
+   |
+10 |     let _completion = chain.complete(written);
+   |                             ^^^^^^^^
+   |
+help: there is a method `complete_zero` with a similar name, but with different arguments
+  --> src/queue.rs
+   |
+   |     pub fn complete_zero(self) -> CompletedDescriptorChain<'brand> {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,32 @@
+[package]
+name = "amla-container"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Helpers for running OCI containers inside amla VMs"
+
+[features]
+default = []
+scheduler = ["dep:amla-vm-scheduler"]
+
+[dependencies]
+amla-vm-guest-rootfs.workspace = true
+amla-vm-erofs.workspace = true
+amla-vm-scheduler = { workspace = true, optional = true }
+amla-vm-vmm.workspace = true
+log.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+amla-vm-fuse.workspace = true
+amla-vm-guest-rootfs.workspace = true
+env_logger.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+amla-vm-guest-rootfs.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,23 @@
+[package]
+name = "amla-vm-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core types, traits, and error definitions for amla-vm"
+
+[lib]
+name = "amla_core"
+
+[dependencies]
+thiserror.workspace = true
+bytemuck = { workspace = true, features = ["derive"] }
+parking_lot.workspace = true
+log.workspace = true
+serde.workspace = true
+postcard.workspace = true
+amla-vm-constants.workspace = true
+amla-vm-ipc.workspace = true
+amla-vm-mem.workspace = true
+
+[lints]
+workspace = true

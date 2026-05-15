@@ -1,0 +1,10 @@
+error[E0624]: method `addr` is private
+ --> tests/ui/writable_addr_is_not_public.rs:9:25
+  |
+9 |     chain.writable()[0].addr()
+  |                         ^^^^ private method
+  |
+ ::: src/descriptor.rs
+  |
+  |     pub(crate) const fn addr(&self) -> u64 {
+  |     -------------------------------------- private method defined here

@@ -1,0 +1,36 @@
+[package]
+name = "amla-vm-kvm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "High-performance KVM VMM with fast spawn via MAP_PRIVATE CoW"
+
+[lib]
+name = "amla_kvm"
+
+[features]
+subprocess = ["dep:amla-vm-ipc", "dep:serde", "dep:postcard"]
+
+[target.'cfg(target_os = "linux")'.dependencies]
+amla-vm-core.workspace = true
+amla-vm-mem.workspace = true
+bytemuck.workspace = true
+kvm-ioctls.workspace = true
+kvm-bindings = { workspace = true, features = ["fam-wrappers"] }
+libc.workspace = true
+rustix = { workspace = true, features = ["event", "fs", "mm", "param", "thread"] }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["io-util", "net", "sync"] }
+tokio-util.workspace = true
+vmm-sys-util.workspace = true
+parking_lot.workspace = true
+smallvec.workspace = true
+log.workspace = true
+amla-vm-ipc = { workspace = true, optional = true }
+amla-vm-ringbuf = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+postcard = { workspace = true, optional = true }
+amla-vm-boot.workspace = true
+
+[lints]
+workspace = true

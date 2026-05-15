@@ -1,0 +1,43 @@
+[package]
+name = "amla-guest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Unified guest binary for amla VMs (agent, init, exec, coreutils, tests)"
+
+[[bin]]
+name = "amla-guest"
+path = "src/main.rs"
+
+[features]
+## Include test subcommands (vm-exit, test-autotest, test-network, udp-echo,
+## tcp-echo, https-get). Without this feature only the core subcommands
+## (agent, init, exec, coreutils applets) are compiled.
+test-binaries = ["dep:rustls"]
+
+[dependencies]
+# Agent
+amla-vm-ringbuf.workspace = true
+amla-vm-constants.workspace = true
+postcard = { workspace = true, features = ["alloc"] }
+serde = { workspace = true, features = ["alloc"] }
+tokio = { workspace = true, features = ["rt", "time", "sync", "macros", "signal", "net", "io-util"] }
+
+# Init + Exec
+base64.workspace = true
+serde_json.workspace = true
+lexopt.workspace = true
+
+# Shared
+libc.workspace = true
+lz4_flex.workspace = true
+
+# HTTPS GET (test-binaries only)
+rustls = { workspace = true, optional = true, default-features = false, features = ["std", "tls12", "ring"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+wayland-server.workspace = true
+wayland-protocols = { workspace = true, features = ["server"] }
+
+[lints]
+workspace = true

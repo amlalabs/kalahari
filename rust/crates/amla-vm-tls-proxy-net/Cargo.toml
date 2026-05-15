@@ -1,0 +1,34 @@
+[package]
+name = "amla-vm-tls-proxy-net"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "TLS MITM proxy for HTTP request/response inspection and modification"
+
+[lib]
+name = "amla_tls_proxy_net"
+
+[dependencies]
+amla-vm-interceptor.workspace = true
+amla-vm-tls-parse.workspace = true
+rustls.workspace = true
+tokio-rustls.workspace = true
+webpki-roots.workspace = true
+rcgen = { workspace = true, features = ["ring", "pem"], default-features = false }
+log.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "io-util", "sync", "net", "time"] }
+hyper.workspace = true
+hyper-util.workspace = true
+http.workspace = true
+http-body.workspace = true
+http-body-util.workspace = true
+bytes.workspace = true
+futures.workspace = true
+parking_lot.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints]
+workspace = true

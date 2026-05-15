@@ -1,0 +1,8 @@
+error[E0599]: no method named `run` found for struct `VirtualMachine<New>` in the current scope
+ --> tests/ui/spawn_on_new.rs:9:8
+  |
+9 |     vm.run(async |_vm| ()).await.unwrap();
+  |        ^^^ method not found in `VirtualMachine<New>`
+  |
+  = note: the method was found for
+          - `VirtualMachine<amla_vmm::Ready<'a, F, N>>`

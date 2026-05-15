@@ -1,0 +1,36 @@
+[package]
+name = "amla-vm-ipc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "amla_ipc"
+
+[dependencies]
+amla-vm-ipc-derive.workspace = true
+amla-vm-mem.workspace = true
+log.workspace = true
+postcard.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+amla-vm-ringbuf.workspace = true
+rustix = { workspace = true, features = ["net", "event", "fs", "mm", "stdio"] }
+tokio = { workspace = true, features = ["net", "sync"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+amla-vm-ringbuf.workspace = true
+libc.workspace = true
+rustix = { workspace = true, features = ["net", "fs", "pipe"] }
+tokio = { workspace = true, features = ["net", "sync"] }
+
+[dev-dependencies]
+rustix = { workspace = true, features = ["net", "event", "pipe"] }
+tabled.workspace = true
+tokio = { workspace = true, features = ["full"] }
+
+[[bench]]
+name = "ipc_channel"
+harness = false
