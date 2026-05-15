@@ -470,7 +470,12 @@ jobs:
               echo "${PKG_NAME}@${PKG_VERSION} already on registry; skipping publish (idempotent re-run)."
             else
               echo "Publishing $tarball (${PKG_NAME}@${PKG_VERSION})"
-              npm publish --access=public --provenance --ignore-scripts "$tarball"
+              # `./` prefix forces npm to treat the argument as a local path.
+              # Without it, a bare `tarballs/x.tgz` matches npm's `<org>/<repo>`
+              # GitHub-spec heuristic and npm tries `git ls-remote
+              # ssh://git@github.com/tarballs/x.tgz.git`, which dies with
+              # "Permission denied (publickey)".
+              npm publish --access=public --provenance --ignore-scripts "./$tarball"
             fi
           done
 
@@ -512,7 +517,11 @@ jobs:
             # lifecycle scripts in current npm versions, set the flag
             # defensively. The sibling-check that prepublishOnly would have
             # done was run as a separate step above.
-            npm publish --access=public --provenance --ignore-scripts "${mains[0]}"
+            #
+            # `./` prefix: see the matching note in the per-arch step. npm
+            # treats a bare `tarballs/x.tgz` as a GitHub `<org>/<repo>` spec
+            # and tries to git-clone it, failing with "Permission denied".
+            npm publish --access=public --provenance --ignore-scripts "./${mains[0]}"
           fi
 
   create-release:
