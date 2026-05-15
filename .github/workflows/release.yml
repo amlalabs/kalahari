@@ -144,31 +144,27 @@ jobs:
   build-native:
     name: build-native (${{ matrix.target }})
     needs: validate-tag
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Native build on x86_64 Linux. The matrix target equals the host
-          # arch, so napi-rs does not invoke --cross-compile and zig is
-          # unnecessary; only the rustup target is required.
-          - target: x86_64-unknown-linux-gnu
+          # All three legs build on an x86_64 ubuntu-latest runner. This
+          # matches the .devcontainer/Dockerfile setup that has been tested
+          # end-to-end, and that the pre-commit `cargo-cross-build` hook
+          # exercises against the same three host triples.
+          #
+          # The kernel sub-build inside amla-vm-guest-rootfs's build.rs
+          # always runs on the BUILD HOST (Linux) regardless of target;
+          # putting darwin on macos-latest pushed that kernel build onto
+          # macOS, which lacks the GNU Make 4 + libelf + Linux cross-gcc
+          # the kernel Makefile demands.
+          - target: x86_64-unknown-linux-gnu       # native; no cross-compile
             triple: linux-x64-gnu
-            runs-on: ubuntu-latest
-          # Cross-compile from x86_64 Linux to aarch64 Linux via zigbuild.
-          # build-native.mjs detects host != target and adds --cross-compile;
-          # napi-rs then drives cargo-zigbuild, which needs the zig binary
-          # on PATH. The previous CARGO=cross / Docker path silently fell
-          # back to host cargo (the runner cannot run privileged containers)
-          # and died with "Failed to find zig".
-          - target: aarch64-unknown-linux-gnu
+          - target: aarch64-unknown-linux-gnu      # cross via aarch64-linux-gnu-gcc
             triple: linux-arm64-gnu
-            runs-on: ubuntu-latest
-          # Native build on Apple Silicon macOS. Same host==target story as
-          # the x64-linux leg; no zig, no apt-get.
-          - target: aarch64-apple-darwin
+          - target: aarch64-apple-darwin           # cross via tools/link-and-sign.sh
             triple: darwin-arm64
-            runs-on: macos-latest
-    runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -198,47 +194,76 @@ jobs:
         with:
           workspaces: rust
 
-      - name: Install kernel build dependencies
-        # Kalahari can pull in amla-vm-vmm -> amla-vm-guest-rootfs whose
-        # build.rs compiles a Linux kernel as part of the guest rootfs.
-        # Kernel build needs objtool (libelf-dev), module-signing / BPF
-        # (libssl-dev, dwarves), parsers (flex, bison), bc, cpio, kmod,
-        # rsync, pkg-config. Standard ubuntu-latest has gcc/make/perl/python
-        # but not these. Gated on Linux: macOS runs `brew`, not `apt-get`,
-        # and would die with "sudo: apt-get: command not found". The macOS
-        # leg never pulls amla-vm-guest-rootfs in practice (it's a dev-dep
-        # of amla-vm-vmm only) so the omission is safe.
-        if: runner.os == 'Linux'
+      - name: Install Linux build dependencies
+        # Mirrors the apt set in .devcontainer/Dockerfile that's tested
+        # end-to-end by the pre-commit `cargo-cross-build` hook:
+        #
+        #   - build-essential, pkg-config: native C toolchain + dev-paths.
+        #   - clang, lld, llvm: llvm-strip + llvm-objdump used by
+        #     tools/link-and-sign.sh when cross-compiling for darwin from
+        #     Linux (the wrapper picks llvm tools on a non-Darwin host).
+        #   - libssl-dev, libelf-dev, flex, bison, bc, dwarves, cpio, kmod,
+        #     rsync: Linux-kernel build (amla-vm-guest-rootfs's build.rs
+        #     compiles a guest kernel when it lands in the dep graph,
+        #     which it does for kalahari via amla-container).
+        #   - gcc-aarch64-linux-gnu, g++-aarch64-linux-gnu,
+        #     libc6-dev-arm64-cross: the aarch64-linux-gnu cross-toolchain
+        #     that scripts/build-native.mjs:crossEnvFor() points to via
+        #     CC_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-gcc". Ring
+        #     (and any other cc-rs-using crate) builds its C bits with this
+        #     compiler when targeting aarch64-linux from x86_64.
+        #   - nasm: required by ring's assembly pre-build on Windows
+        #     cross-compile; harmless on the other legs.
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y \
+          sudo apt-get install -y --no-install-recommends \
             build-essential pkg-config \
-            libelf-dev libssl-dev dwarves \
+            clang lld llvm \
+            libssl-dev libelf-dev dwarves \
             flex bison bc \
-            cpio kmod rsync
+            cpio kmod rsync \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross \
+            nasm
 
-      - name: Install zig (for cargo-zigbuild cross-compile)
-        # build-native.mjs invokes `napi build --cross-compile` whenever
-        # the target arch differs from the host arch. napi-rs's
-        # --cross-compile is implemented via cargo-zigbuild, which shells
-        # out to `zig cc` as the linker. zig is not on the runner image
-        # by default; without it the build fails with "Failed to find zig".
-        #
-        # Gated on the only matrix entry that actually cross-compiles
-        # (linux-arm64-gnu from an x86_64 runner). Other legs build for
-        # the host and skip the zigbuild path entirely.
-        if: matrix.triple == 'linux-arm64-gnu'
+      - name: Install zig (matches devcontainer)
+        # Used by two cross-compile paths:
+        #   - linux-arm64-gnu: napi-rs's --cross-compile flag drives
+        #     cargo-zigbuild (Rust linker = zig cc).
+        #   - darwin-arm64: tools/link-and-sign.sh (configured as the
+        #     darwin linker in src/rust/.cargo/config.toml) shells out to
+        #     `zig cc -target aarch64-macos` for the actual link.
+        # Version pinned to match .devcontainer/Dockerfile. The native
+        # linux-x64-gnu leg does not need zig.
+        if: matrix.triple != 'linux-x64-gnu'
         run: |
           set -euo pipefail
-          ZIG_VERSION="0.13.0"
-          curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz" -o /tmp/zig.tar.xz
+          ZIG_VERSION="0.15.2"
+          curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" -o /tmp/zig.tar.xz
           sudo mkdir -p /opt/zig
           sudo tar -xJf /tmp/zig.tar.xz -C /opt/zig --strip-components=1
           echo "/opt/zig" >> "$GITHUB_PATH"
-          # Smoke-test in the current shell so a broken download fails the
-          # step explicitly here rather than later inside napi build.
           /opt/zig/zig version
+
+      - name: Install rcodesign (apple-codesign)
+        # tools/link-and-sign.sh codesigns Mach-O binaries that carry an
+        # __DATA,__entitlements section (amla-hvf-worker embeds the
+        # `com.apple.security.hypervisor` entitlement so HVF will accept
+        # it at runtime). On Linux the wrapper uses `rcodesign` from the
+        # apple-codesign crate; without it the wrapper silently skips
+        # signing (|| true) and the published binary is unusable on
+        # macOS.
+        if: matrix.triple == 'darwin-arm64'
+        # Use binstall for a fast pre-built binary install — cargo install
+        # would compile from source (slow). apple-codesign publishes
+        # signed release tarballs on its GitHub releases.
+        run: |
+          set -euo pipefail
+          if ! command -v cargo-binstall >/dev/null 2>&1; then
+            curl -fsSL https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          fi
+          cargo binstall -y --locked apple-codesign
+          rcodesign --version
 
       - name: Install npm dependencies
         run: npm install

@@ -1,7 +1,6 @@
 [workspace]
 resolver = "3"
 members = [
-    # ── amla-vm ──
     "crates/amla-vm-boot",
     "crates/amla-vm-composite-fs",
     "crates/amla-vm-constants",
@@ -37,23 +36,14 @@ members = [
     "crates/amla-vm-vmm",
     "crates/kalahari",
 
-    # ── amla-ax ──
-
-    # ── amla-oci ──
     "crates/amla-oci",
 
-    # ── amla-container ──
     "crates/amla-container",
     "crates/amla-container-store",
     "crates/amla-container-engine",
 
-    # ── amla-protocol ──
 
-    # ── amla-sandbox ──
 
-    # ── infer-market ──
-
-    # ── guest (VM + container, cross-compiled for musl) ──
     "crates/amla-vm-ringbuf",
     "crates/amla-guest",
 ]
@@ -61,7 +51,7 @@ members = [
 # Placeholder. The real release version is injected at extract time by
 # scripts/extract-mirror.py (driven by the release-vX.Y.Z tag).
 # See mirrors/README.md for the release flow.
-version = "0.2.3"
+version = "0.2.4"
 edition = "2024"
 license = "AGPL-3.0-or-later OR BUSL-1.1"
 authors = ["Amla Labs <hi@amlalabs.com>"]
@@ -72,7 +62,6 @@ authors = ["Amla Labs <hi@amlalabs.com>"]
 
 [workspace.dependencies]
 
-# ── Internal crates (amla-vm) ──
 amla-vm-boot = { path = "crates/amla-vm-boot" }
 amla-vm-composite-fs = { path = "crates/amla-vm-composite-fs" }
 amla-vm-constants = { path = "crates/amla-vm-constants" }
@@ -101,7 +90,6 @@ amla-vm-usernet = { path = "crates/amla-vm-usernet" }
 amla-vm-virtio = { path = "crates/amla-vm-virtio" }
 amla-vm-virtio-console = { path = "crates/amla-vm-virtio-console" }
 amla-vm-virtio-fs = { path = "crates/amla-vm-virtio-fs" }
-amla-vm-virtio-mem = { path = "crates/amla-vm-virtio-mem" }
 amla-vm-virtio-mmio = { path = "crates/amla-vm-virtio-mmio" }
 amla-vm-virtio-net = { path = "crates/amla-vm-virtio-net" }
 amla-vm-virtio-pmem = { path = "crates/amla-vm-virtio-pmem" }
@@ -109,53 +97,16 @@ amla-vm-virtio-rng = { path = "crates/amla-vm-virtio-rng" }
 amla-vm-vmm = { path = "crates/amla-vm-vmm", features = ["usernet"] }
 kalahari = { path = "crates/kalahari" }
 
-# ── Internal crates (amla-ax) ──
-amla-ax-agents = { path = "crates/amla-ax-agents" }
-amla-ax-bin = { path = "crates/amla-ax-bin" }
-amla-ax-cli = { path = "crates/amla-ax-cli" }
-amla-ax-store = { path = "crates/amla-ax-store" }
-amla-ax-daemon = { path = "crates/amla-ax-daemon" }
-amla-ax-frontend = { path = "crates/amla-ax-frontend" }
-amla-ax-gitfs = { path = "crates/amla-ax-gitfs" }
-amla-ax-mcp = { path = "crates/amla-ax-mcp" }
-amla-ax-sniffer = { path = "crates/amla-ax-sniffer" }
-
-# ── Internal crates (amla-oci) ──
 amla-oci = { path = "crates/amla-oci" }
 
-# ── Internal crates (amla-container) ──
 amla-container = { path = "crates/amla-container" }
 amla-container-store = { path = "crates/amla-container-store" }
-amla-vm-terminal = { path = "crates/amla-vm-terminal" }
 amla-container-engine = { path = "crates/amla-container-engine" }
-amla-container-cli = { path = "crates/amla-container-cli" }
-amla-container-cli-bin = { path = "crates/amla-container-cli-bin" }
 
-# ── Internal crates (amla-protocol) ──
-amla-protocol = { path = "crates/amla-protocol" }
-amla-protocol-capabilities = { path = "crates/amla-protocol-capabilities" }
-amla-protocol-constraints = { path = "crates/amla-protocol-constraints" }
 
-# ── Internal crates (amla-sandbox) ──
-amla-sandbox = { path = "crates/amla-sandbox" }
-amla-sandbox-audit = { path = "crates/amla-sandbox-audit" }
-amla-sandbox-js = { path = "crates/amla-sandbox-js" }
-amla-sandbox-scheduler = { path = "crates/amla-sandbox-scheduler" }
-amla-sandbox-shell = { path = "crates/amla-sandbox-shell" }
-amla-sandbox-tools = { path = "crates/amla-sandbox-tools" }
-amla-sandbox-vfs = { path = "crates/amla-sandbox-vfs" }
 
-# ── Internal crates (infer-market) ──
-infer-shared = { path = "crates/infer-shared" }
-infer-store = { path = "crates/infer-store" }
-infer-seller-core = { path = "crates/infer-seller-core" }
-infer-relay-core = { path = "crates/infer-relay-core" }
-infer-worker-core = { path = "crates/infer-worker-core" }
-
-# ── Internal crates (guest) ──
 amla-vm-ringbuf = { path = "crates/amla-vm-ringbuf" }
 
-# ── Async runtime ──
 tokio = { version = "1.43", features = ["full", "parking_lot"] }
 tokio-util = "0.7"
 async-trait = "0.1"
@@ -163,46 +114,36 @@ trait-variant = "0.1"
 futures = "0.3"
 futures-util = "0.3"
 
-# ── Concurrency ──
 crossbeam = "0.8"
 parking_lot = "0.12"
 event-listener = "5.4"
 
-# ── Error handling ──
 thiserror = "2.0"
 
-# ── Logging / tracing ──
 log = "0.4"
 env_logger = "0.11"
 console-subscriber = "0.4"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 
-# ── Serialization ──
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 postcard = { version = "1.0", features = ["alloc"] }
 ciborium = "0.2"
 toml = "0.8"
 
-# ── Byte casting ──
 bytemuck = { version = "1.21", features = ["derive", "min_const_generics"] }
 
-# ── Integers ──
 nonmax = "0.5"
 
-# ── Small optimizations ──
 smallvec = "1.13"
 
-# ── libc / low-level Unix ──
 libc = "0.2"
 rustix = "1.0"
 
-# ── KVM ──
 kvm-ioctls = "0.19"
 kvm-bindings = { version = "0.10", features = ["fam-wrappers"] }
 
-# ── HTTP ──
 axum = { version = "0.8", features = ["ws"] }
 reqwest = { version = "0.12", default-features = false, features = ["json"] }
 hyper = { version = "1.5", features = ["server", "client", "http1", "http2"] }
@@ -213,56 +154,41 @@ http-body = "1"
 http-body-util = "0.1"
 bytes = "1"
 
-# ── WebSocket ──
 tokio-tungstenite = "0.28"
 
-# ── Terminal ──
 crossterm = { version = "0.28", features = ["event-stream"] }
 indicatif = "0.18"
 vt100 = "0.16"
 
-# ── CLI ──
 clap = { version = "4", features = ["derive"] }
 
-# ── TLS / crypto ──
 rustls = { version = "0.23", default-features = false, features = ["std", "tls12", "ring"] }
 sha2 = "0.10"
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
 rand = "0.9"
 
-# ── Git ──
 gix = { version = "0.80", features = ["parallel", "index"] }
 
-# ── Database ──
 redb = "3"
 
-# ── Cache ──
 lru = "0.16"
 
-# ── Time ──
 chrono = { version = "0.4", features = ["serde"] }
 
-# ── Memory-mapped I/O ──
 memmap2 = "0.9"
 
-# ── Compression ──
 lz4_flex = "0.11"
 
-# ── Allocator ──
 mimalloc = "0.1"
 
-# ── File system ──
 tempfile = "3"
 dirs = "5"
 
-# ── Testing / benchmarks ──
 proptest = "1.5"
 criterion = { version = "0.5", features = ["html_reports"] }
 
-# ── Windows ──
 windows-sys = "0.60"
 
-# ── WASM ──
 wasm-bindgen = "0.2"
 js-sys = "0.3"
 getrandom = { version = "0.3", features = ["wasm_js"] }
@@ -272,7 +198,6 @@ getrandom = { version = "0.3", features = ["wasm_js"] }
 # ============================================================================
 
 
-# ── Additional dependencies (unified) ──
 anyhow = "1"
 async-stream = "0.3"
 base64 = "0.22"
@@ -366,7 +291,6 @@ disallowed_methods = "deny"
 # `#[allow(clippy::restriction)]` in their expansion, which clashes with
 # `forbid` (E0453, allow-inside-forbid) — so clap-using crates relax this
 # back to `deny` in their own `[lints.clippy]` tables
-# (see amla-ax-bin, amla-ax-agents, amla-container-cli-bin, infer-seller).
 undocumented_unsafe_blocks = "forbid"
 # Pedantic overrides
 module_name_repetitions = "allow"
@@ -394,34 +318,4 @@ large_futures = "allow"
 [profile.release.package.amla-vm-hvf]
 strip = false
 
-# amla-container-cli-bin embeds entitlements and is codesigned by the
-# linker wrapper; rustc's post-link strip would invalidate the signature.
-[profile.release.package.amla-container-cli-bin]
-strip = false
-
-# WASM-targeted crates need size optimization
-[profile.release.package.amla-sandbox]
-opt-level = "z"
-strip = true
-
-[profile.release.package.amla-protocol]
-opt-level = "z"
-strip = true
-
-[profile.release.package.amla-protocol-capabilities]
-opt-level = "z"
-strip = true
-
-[profile.release.package.amla-protocol-constraints]
-opt-level = "z"
-strip = true
-
-[profile.release.package.infer-router]
-opt-level = "s"
-
-# ============================================================================
-# Patched crates
-# ============================================================================
-
 [patch.crates-io]
-libmimalloc-sys = { path = "vendor/libmimalloc-sys" }
