@@ -479,16 +479,19 @@ jobs:
             fi
           done
 
-      # Run the sibling-presence check explicitly between sub-package publish
-      # and main publish. We cannot rely on `prepublishOnly` firing here:
-      # `npm publish <tarball>` operates on a pre-packed archive and skips
-      # both `prepack` and `prepublishOnly`, so the package's built-in
-      # `release:check-siblings` step would otherwise never run.
-      # The script lives at scripts/check-siblings-published.mjs relative to
-      # the (mirror) repo root, which is also the npm package root.
-      - name: Verify per-arch siblings are published
-        run: node scripts/check-siblings-published.mjs
-
+      # No "Verify per-arch siblings are published" step before the main
+      # publish: it would re-query `npm view`, which lags the actual PUT
+      # by several seconds due to npm's read-after-write propagation, and
+      # has been seen to race-fail even when all three siblings were
+      # already on the registry. The per-arch publish loop above is the
+      # authoritative gate — its exit-0 means each sibling is either
+      # newly PUT (registry accepted) or pre-existing (`npm view`
+      # idempotency check skipped it). If we get past that loop, the
+      # siblings are on the registry. The `check-siblings-published.mjs`
+      # script remains wired into the package's `prepublishOnly` for
+      # manual `npm publish` from a human's machine, where the read-
+      # after-write lag is naturally absorbed by the time between
+      # publishing siblings and publishing main.
       - name: Publish main package
         # No NODE_AUTH_TOKEN: see the per-arch publish step above. Same
         # Trusted Publishing path applies.
